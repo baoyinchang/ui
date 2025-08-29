@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>菜单调试页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .debug-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 H-System EDR 菜单调试</h1>
+    
+    <div class="debug-card">
+        <h2>环境检查</h2>
+        <button onclick="checkEnvironment()">检查环境变量</button>
+        <button onclick="checkVueApp()">检查Vue应用</button>
+        <button onclick="checkStores()">检查Store状态</button>
+        <div id="env-results"></div>
+    </div>
+    
+    <div class="debug-card">
+        <h2>路由分析</h2>
+        <button onclick="analyzeRoutes()">分析路由配置</button>
+        <button onclick="checkMenuRoutes()">检查菜单路由</button>
+        <button onclick="testPermissions()">测试权限检查</button>
+        <div id="route-results"></div>
+    </div>
+    
+    <div class="debug-card">
+        <h2>权限调试</h2>
+        <button onclick="debugPermissions()">调试权限系统</button>
+        <button onclick="simulateLogin()">模拟登录</button>
+        <div id="permission-results"></div>
+    </div>
+
+    <script>
+        function log(containerId, message, type = 'info') {
+            const container = document.getElementById(containerId);
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `status ${type}`;
+            logEntry.innerHTML = `[${timestamp}] ${message}`;
+            container.appendChild(logEntry);
+        }
+
+        function clearResults(containerId) {
+            document.getElementById(containerId).innerHTML = '';
+        }
+
+        async function checkEnvironment() {
+            clearResults('env-results');
+            log('env-results', '🔍 检查环境变量...', 'info');
+            
+            try {
+                // 检查是否在Vue应用中
+                if (typeof window.Vue !== 'undefined' || typeof window.__VUE__ !== 'undefined') {
+                    log('env-results', '✅ Vue环境检测成功', 'success');
+                } else {
+                    log('env-results', '❌ 未检测到Vue环境', 'error');
+                }
+                
+                // 尝试访问环境变量（需要在Vue应用中）
+                log('env-results', '💡 请在浏览器控制台中运行以下命令:', 'info');
+                log('env-results', 'console.log("VITE_ENABLE_AUTH:", import.meta.env.VITE_ENABLE_AUTH)', 'info');
+                
+            } catch (error) {
+                log('env-results', `❌ 环境检查失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function checkVueApp() {
+            clearResults('env-results');
+            log('env-results', '🔍 检查Vue应用状态...', 'info');
+            
+            try {
+                // 检查Vue DevTools
+                if (window.__VUE_DEVTOOLS_GLOBAL_HOOK__) {
+                    log('env-results', '✅ Vue DevTools可用', 'success');
+                } else {
+                    log('env-results', '⚠️ Vue DevTools不可用', 'warning');
+                }
+                
+                log('env-results', '💡 请在主应用页面的控制台中运行:', 'info');
+                log('env-results', '1. 检查路由: console.log($router.getRoutes())', 'info');
+                log('env-results', '2. 检查用户store: console.log(useUserStore())', 'info');
+                log('env-results', '3. 检查应用store: console.log(useAppStore())', 'info');
+                
+            } catch (error) {
+                log('env-results', `❌ Vue应用检查失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function checkStores() {
+            clearResults('env-results');
+            log('env-results', '🔍 检查Store状态...', 'info');
+            
+            log('env-results', '💡 在主应用页面控制台中运行以下代码:', 'info');
+            
+            const debugCode = `
+// 检查用户Store
+const userStore = useUserStore();
+console.log('用户Store:', userStore);
+console.log('是否登录:', userStore.isLoggedIn);
+console.log('用户权限:', userStore.permissions);
+
+// 测试权限检查
+console.log('测试权限 alert:read:', userStore.hasPermission('alert:read'));
+console.log('测试权限 asset:read:', userStore.hasPermission('asset:read'));
+
+// 检查环境变量
+console.log('认证开关:', import.meta.env.VITE_ENABLE_AUTH);
+            `;
+            
+            log('env-results', debugCode, 'info');
+        }
+
+        async function analyzeRoutes() {
+            clearResults('route-results');
+            log('route-results', '🔍 分析路由配置...', 'info');
+            
+            const routeAnalysisCode = `
+// 获取所有路由
+const allRoutes = $router.getRoutes();
+console.log('所有路由数量:', allRoutes.length);
+
+// 查找Layout路由
+const layoutRoute = allRoutes.find(r => r.name === 'Layout');
+console.log('Layout路由:', layoutRoute);
+
+// 获取菜单路由
+const menuRoutes = layoutRoute?.children?.filter(route => !route.meta?.hideInMenu) || [];
+console.log('菜单路由数量:', menuRoutes.length);
+console.log('菜单路由:', menuRoutes);
+
+// 分析每个菜单路由的权限
+menuRoutes.forEach(route => {
+    console.log(\`路由 \${route.path}:\`, {
+        title: route.meta?.title,
+        permission: route.meta?.permission,
+        hideInMenu: route.meta?.hideInMenu
+    });
+});
+            `;
+            
+            log('route-results', '💡 在主应用页面控制台中运行:', 'info');
+            log('route-results', routeAnalysisCode, 'info');
+        }
+
+        async function checkMenuRoutes() {
+            clearResults('route-results');
+            log('route-results', '🔍 检查菜单路由过滤...', 'info');
+            
+            const menuCheckCode = `
+// 模拟MainLayout中的菜单路由计算
+const router = useRouter();
+const userStore = useUserStore();
+
+// 获取菜单路由
+const menuRoutes = router.getRoutes()
+    .find(route => route.name === 'Layout')
+    ?.children?.filter(route => !route.meta?.hideInMenu) || [];
+
+console.log('原始菜单路由:', menuRoutes);
+
+// 模拟权限检查
+const hasPermission = (permission) => {
+    if (!permission) return true;
+    
+    const ENABLE_AUTH = import.meta.env.VITE_ENABLE_AUTH === 'true';
+    if (!ENABLE_AUTH) return true;
+    
+    return userStore.hasPermission(permission);
+};
+
+// 过滤有权限的路由
+const visibleRoutes = menuRoutes.filter(route => hasPermission(route.meta?.permission));
+console.log('可见菜单路由:', visibleRoutes);
+console.log('可见菜单数量:', visibleRoutes.length);
+            `;
+            
+            log('route-results', '💡 在主应用页面控制台中运行:', 'info');
+            log('route-results', menuCheckCode, 'info');
+        }
+
+        async function testPermissions() {
+            clearResults('route-results');
+            log('route-results', '🔍 测试权限检查函数...', 'info');
+            
+            const permissionTestCode = `
+// 测试权限检查
+const userStore = useUserStore();
+
+// 测试各种权限
+const permissions = ['alert:read', 'asset:read', 'hunting:read', 'intelligence:read', 'investigation:read', 'report:read', 'system:read'];
+
+console.log('环境变量 VITE_ENABLE_AUTH:', import.meta.env.VITE_ENABLE_AUTH);
+
+permissions.forEach(perm => {
+    const hasPermission = userStore.hasPermission(perm);
+    console.log(\`权限 \${perm}: \${hasPermission}\`);
+});
+
+// 测试无权限要求的情况
+console.log('无权限要求:', userStore.hasPermission(undefined));
+console.log('空字符串权限:', userStore.hasPermission(''));
+            `;
+            
+            log('route-results', '💡 在主应用页面控制台中运行:', 'info');
+            log('route-results', permissionTestCode, 'info');
+        }
+
+        async function debugPermissions() {
+            clearResults('permission-results');
+            log('permission-results', '🔍 调试权限系统...', 'info');
+            
+            log('permission-results', '📋 权限调试步骤:', 'info');
+            log('permission-results', '1. 确认 VITE_ENABLE_AUTH=false', 'info');
+            log('permission-results', '2. 检查 userStore.hasPermission 方法', 'info');
+            log('permission-results', '3. 检查 MainLayout.vue 中的 hasPermission 函数', 'info');
+            log('permission-results', '4. 验证菜单过滤逻辑', 'info');
+            
+            const fullDebugCode = `
+// 完整的权限调试
+console.log('=== 权限系统调试 ===');
+
+// 1. 环境检查
+console.log('1. 环境变量:');
+console.log('   VITE_ENABLE_AUTH:', import.meta.env.VITE_ENABLE_AUTH);
+
+// 2. Store检查
+const userStore = useUserStore();
+console.log('2. 用户Store:');
+console.log('   isLoggedIn:', userStore.isLoggedIn);
+console.log('   permissions:', userStore.permissions);
+console.log('   hasPermission方法:', typeof userStore.hasPermission);
+
+// 3. 权限测试
+console.log('3. 权限测试:');
+const testPermissions = ['alert:read', 'asset:read', 'hunting:read'];
+testPermissions.forEach(perm => {
+    console.log(\`   \${perm}: \${userStore.hasPermission(perm)}\`);
+});
+
+// 4. 菜单路由检查
+console.log('4. 菜单路由:');
+const router = useRouter();
+const layoutRoute = router.getRoutes().find(r => r.name === 'Layout');
+const menuRoutes = layoutRoute?.children?.filter(r => !r.meta?.hideInMenu) || [];
+console.log('   菜单路由数量:', menuRoutes.length);
+menuRoutes.forEach(route => {
+    const hasPermission = !route.meta?.permission || userStore.hasPermission(route.meta.permission);
+    console.log(\`   \${route.path} (\${route.meta?.title}): \${hasPermission}\`);
+});
+            `;
+            
+            log('permission-results', '💡 在主应用页面控制台中运行完整调试:', 'info');
+            log('permission-results', fullDebugCode, 'info');
+        }
+
+        async function simulateLogin() {
+            clearResults('permission-results');
+            log('permission-results', '🔍 模拟登录状态...', 'info');
+            
+            const loginSimulationCode = `
+// 模拟登录状态
+const userStore = useUserStore();
+
+// 设置模拟用户数据
+userStore.user = {
+    id: 1,
+    username: 'admin',
+    email: 'admin@hsystem.com',
+    fullName: '系统管理员',
+    avatar: '',
+    roles: [
+        {
+            id: 1,
+            name: 'admin',
+            displayName: '管理员'
+        }
+    ]
+};
+
+// 设置所有权限
+userStore.permissions = [
+    'alert:read', 'alert:write', 'alert:delete',
+    'asset:read', 'asset:write', 'asset:delete',
+    'hunting:read', 'hunting:write', 'hunting:delete',
+    'intelligence:read', 'intelligence:write', 'intelligence:delete',
+    'investigation:read', 'investigation:write', 'investigation:delete',
+    'report:read', 'report:write', 'report:delete',
+    'system:read', 'system:write', 'system:delete',
+    'user:read', 'user:write', 'user:delete'
+];
+
+console.log('模拟登录完成');
+console.log('用户:', userStore.user);
+console.log('权限:', userStore.permissions);
+console.log('现在刷新页面查看菜单');
+            `;
+            
+            log('permission-results', '💡 在主应用页面控制台中运行:', 'info');
+            log('permission-results', loginSimulationCode, 'info');
+            log('permission-results', '⚠️ 注意：运行后需要刷新页面才能看到效果', 'warning');
+        }
+
+        // 页面加载时的提示
+        window.onload = function() {
+            log('env-results', '📄 菜单调试页面已加载', 'success');
+            log('env-results', '💡 请先在主应用页面 (http://192.168.100.123:3000) 打开开发者工具', 'info');
+            log('env-results', '然后使用此页面的按钮生成调试代码', 'info');
+        };
+    </script>
+</body>
+</html>

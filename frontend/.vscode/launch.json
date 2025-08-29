@@ -1,0 +1,80 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "启动Chrome调试",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}/src",
+      "breakOnLoad": true,
+      "sourceMapPathOverrides": {
+        "webpack:///src/*": "${webRoot}/*"
+      }
+    },
+    {
+      "name": "附加到Chrome",
+      "type": "chrome",
+      "request": "attach",
+      "port": 9222,
+      "webRoot": "${workspaceFolder}/src"
+    },
+    {
+      "name": "启动Edge调试",
+      "type": "msedge",
+      "request": "launch",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}/src",
+      "breakOnLoad": true,
+      "sourceMapPathOverrides": {
+        "webpack:///src/*": "${webRoot}/*"
+      }
+    },
+    {
+      "name": "Node.js调试",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/scripts/build.js",
+      "args": ["--mode", "development"],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Vite开发服务器",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/.bin/vite",
+      "args": ["--host", "0.0.0.0", "--port", "3000"],
+      "console": "integratedTerminal",
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "运行测试",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/.bin/vitest",
+      "args": ["run"],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "测试监听模式",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/.bin/vitest",
+      "args": ["--watch"],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    }
+  ],
+  "compounds": [
+    {
+      "name": "启动开发环境",
+      "configurations": ["Vite开发服务器", "启动Chrome调试"],
+      "stopAll": true
+    }
+  ]
+}

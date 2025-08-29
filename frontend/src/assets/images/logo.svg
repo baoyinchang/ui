@@ -1,0 +1,23 @@
+<svg width="120" height="40" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- H-System EDR Logo -->
+  <rect width="120" height="40" rx="4" fill="#1890ff"/>
+  
+  <!-- H字母 -->
+  <rect x="8" y="8" width="3" height="24" fill="white"/>
+  <rect x="8" y="18" width="12" height="3" fill="white"/>
+  <rect x="17" y="8" width="3" height="24" fill="white"/>
+  
+  <!-- 分隔线 -->
+  <rect x="24" y="12" width="1" height="16" fill="white" opacity="0.5"/>
+  
+  <!-- System文字 -->
+  <text x="30" y="16" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="white">System</text>
+  
+  <!-- EDR文字 -->
+  <text x="30" y="28" font-family="Arial, sans-serif" font-size="8" font-weight="normal" fill="white" opacity="0.8">EDR</text>
+  
+  <!-- 蜜罐图标 -->
+  <circle cx="100" cy="20" r="8" fill="white" opacity="0.2"/>
+  <circle cx="100" cy="20" r="4" fill="white" opacity="0.6"/>
+  <circle cx="100" cy="20" r="2" fill="white"/>
+</svg>

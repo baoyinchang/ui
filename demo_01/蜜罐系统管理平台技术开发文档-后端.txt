@@ -1,0 +1,288 @@
+H-System 蜜罐 EDR 平台技术开发文档
+一、项目概述
+H-System 蜜罐 EDR 平台是一款集成终端安全检测与响应系统，整合蜜罐技术与终端检测能力，实现威胁监控、告警分析、资产梳理及安全响应等功能。平台采用前后端分离架构，支持单机部署与蜜罐主机部署两种模式，通过 Docker 容器化简化部署流程。
+二、技术架构设计
+2.1 整体架构
+采用分层架构 + 模块化设计，避免过度拆分导致的开发复杂度，架构层次如下：
+客户端层（浏览器/Vue前端）
+    ↓↑
+API层（FastAPI路由/认证授权）
+    ↓↑
+业务逻辑层（功能模块核心逻辑）
+    ↓↑
+数据访问层（数据库交互抽象）
+    ↓↑
+数据存储层（PostgreSQL + Manticore）
+
+2.2 后端技术栈
+核心框架：Python 3.9+ + FastAPI 0.100+
+数据库：
+PostgreSQL 14+：存储结构化数据（资产、漏洞、用户配置等）
+Manticore Search 6.0+：存储非结构化日志与检索优化
+任务调度：Celery 5.3+（日志同步、定时任务）
+认证授权：JWT（JSON Web Token）
+部署容器：Docker + Docker Compose
+三、核心模块设计
+3.1 数据模型设计
+3.1.1 PostgreSQL 核心表结构
+表名
+用途
+核心字段
+assets
+资产信息管理
+id, name, ip, type, os, status, last_checkin
+vulnerabilities
+漏洞记录
+id, cve_id, asset_id, severity, cvss, description, status
+alerts
+告警信息
+id, asset_id, alert_type, severity, evidence, status, create_time
+users
+用户管理
+id, username, password_hash, role, permissions
+compliance_checks
+合规检查项
+id, policy, description, severity, affected_count
+hunting_templates
+威胁狩猎模板
+id, name, description, query, tactics, create_by
+
+3.1.2 Manticore 索引结构
+# 蜜罐事件日志索引
+index sim_service_events {
+    type = rt
+    path = /var/lib/manticore/sim_service_events
+    rt_field = event_type
+    rt_field = process_name
+    rt_field = command_line
+    rt_attr_uint = asset_id
+    rt_attr_timestamp = event_time
+    rt_attr_string = src_ip
+    rt_attr_string = dst_ip
+}
+
+3.2 API 接口规范
+3.2.1 通用规范
+基础路径：/api/v1
+数据格式：请求 / 响应均使用 JSON
+认证方式：请求头携带Authorization: Bearer {token}
+状态码：
+200：成功
+400：请求参数错误
+401：未认证
+403：权限不足
+500：服务器错误
+3.2.2 核心接口定义
+1. 资产管理模块
+# 获取资产列表
+GET /assets?page=1&size=20
+响应：{
+  "total": 100,
+  "items": [{"id": 1, "name": "WIN-SERVER-01", "ip": "192.168.1.101", ...}]
+}
+
+# 获取漏洞详情
+GET /vulnerabilities/{id}
+响应：{"id": 1, "cve_id": "CVE-2023-1234", "severity": "high", ...}
+
+2. 告警中心模块
+# 获取告警列表
+GET /alerts?severity=high&status=unhandled
+响应：{
+  "total": 25,
+  "items": [{"id": 1, "alert_type": "emotet", "severity": "critical", ...}]
+}
+
+# 处理告警
+PUT /alerts/{id}/handle
+请求体：{"status": "handled", "remark": "已隔离主机"}
+响应：{"success": true}
+
+3. 威胁狩猎模块
+# 执行狩猎查询
+POST /hunting/query
+请求体：{"query": "process_name:svchost.exe AND path:C:\\Temp\\*"}
+响应：{
+  "total": 15,
+  "items": [{"event_time": "2025-08-27 14:25:03", "process_name": "svchost.exe", ...}]
+}
+
+# 保存狩猎模板
+POST /hunting/templates
+请求体：{"name": "可疑PowerShell活动", "query": "...", "tactics": ["execution"]}
+响应：{"id": 1, "success": true}
+
+4. 系统管理模块
+# 检查系统更新
+GET /system/update/check
+响应：{
+  "current_version": "v2.5.3",
+  "target_version": "v2.6.0",
+  "update_size": "356 MB"
+}
+
+# 开始系统更新
+POST /system/update/start
+请求体：{"confirm_backup": true}
+响应：{"progress": 0, "status": "downloading"}
+
+3.3 业务流程设计
+3.3.1 蜜罐日志处理流程
+采集：通过蜜罐服务接口接收原始日志（模拟服务 / 虚拟机行为）
+清洗：标准化字段格式（时间、IP、进程名等），过滤无效数据
+存储：
+结构化数据（资产 ID、事件类型等）写入 PostgreSQL
+原始日志与检索字段写入 Manticore
+分析：触发关联规则（如进程路径异常 + 恶意 IP 通信），生成告警
+推送：关键告警通过 WebSocket 实时推送至前端
+3.3.2 系统更新流程
+前端调用/system/update/check接口获取更新信息
+用户确认更新并勾选备份确认
+后端执行：
+下载更新包（校验完整性）
+备份系统配置与关键数据
+执行增量更新（替换二进制文件、更新数据库 schema）
+重启服务应用更新
+实时返回更新进度（通过轮询或 WebSocket）
+四、前端与后端交互设计
+4.1 状态管理
+前端使用 Pinia 管理全局状态，核心模块：
+userStore：用户认证信息与权限
+assetStore：资产列表与详情缓存
+alertStore：告警数据与处理状态
+4.2 实时通信
+关键场景采用 WebSocket：
+告警实时推送（alert-center.html）
+系统更新进度（system-management.html）
+威胁狩猎查询结果（threat-hunting.html）
+五、部署架构
+5.1 单机部署（Docker Compose）
+version: '3'
+services:
+  api:
+    build: ./backend
+    ports: ["8000:8000"]
+    depends_on: ["postgres", "manticore", "redis"]
+  postgres:
+    image: postgres:14
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+  manticore:
+    image: manticoresearch/manticore
+    volumes: ["manticoredata:/var/lib/manticore"]
+  redis:
+    image: redis:7
+volumes:
+  pgdata:
+  manticoredata:
+
+5.2 扩展说明
+支持部署在单一服务器或蜜罐主机
+后期可通过 Nginx 负载均衡扩展为多实例集群
+六、安全设计
+数据安全：
+敏感配置加密存储（如数据库密码）
+备份文件 AES-256 加密
+日志传输采用 TLS 1.3 加密
+接口安全：
+JWT 令牌有效期限制（默认 2 小时）
+关键操作（如系统更新）需二次确认
+防暴力破解（失败 5 次锁定 30 分钟）
+审计日志：
+记录所有用户操作（登录、配置修改、告警处理等）
+日志不可篡改，保留 90 天以上
+七、开发任务清单
+模块
+开发任务
+优先级
+基础框架
+搭建 FastAPI 项目结构、数据库连接池
+高
+认证模块
+实现 JWT 认证、角色权限控制
+高
+资产模块
+资产 CRUD、漏洞管理接口
+高
+告警模块
+告警生成、处理流程、WebSocket 推送
+高
+威胁狩猎
+Manticore 查询封装、模板管理
+中
+系统管理
+更新机制、日志管理、备份功能
+中
+前端集成
+API 对接、状态管理、实时通信
+高
+
+八、版本规划
+v1.0：实现核心功能（资产、告警、基础狩猎）
+v2.0：完善威胁情报、自动化响应
+v3.0：支持集群部署、多租户管理
+
+本文档将随开发进度持续迭代，所有接口与数据模型需严格遵循设计规范，避免后期大规模重构。
+
+backend/
+├── app/
+│   ├── __init__.py                 # 应用初始化
+│   ├── main.py                     # 入口文件（FastAPI实例、路由注册）
+│   ├── core/                       # 核心配置模块
+│   │   ├── __init__.py
+│   │   ├── config.py               # 全局配置（数据库连接、密钥等）
+│   │   ├── security.py             # 加密、JWT认证逻辑
+│   │   └── dependencies.py         # 依赖项（认证依赖、权限检查等）
+│   ├── api/                        # API路由模块
+│   │   ├── __init__.py
+│   │   ├── v1/                     # v1版本API
+│   │   │   ├── __init__.py
+│   │   │   ├── assets.py           # 资产管理接口
+│   │   │   ├── alerts.py           # 告警中心接口
+│   │   │   ├── hunting.py          # 威胁狩猎接口
+│   │   │   ├── system.py           # 系统管理接口
+│   │   │   └── router.py           # 路由汇总注册
+│   ├── models/                     # 数据模型
+│   │   ├── __init__.py
+│   │   ├── postgres.py             # PostgreSQL ORM模型（资产、漏洞等）
+│   │   └── manticore.py            # Manticore索引模型（日志检索）
+│   ├── services/                   # 业务逻辑层
+│   │   ├── __init__.py
+│   │   ├── asset_service.py        # 资产相关业务
+│   │   ├── alert_service.py        # 告警处理业务
+│   │   ├── hunting_service.py      # 威胁狩猎业务
+│   │   ├── log_service.py          # 日志处理业务
+│   │   └── system_service.py       # 系统管理业务
+│   ├── crud/                       # 数据访问层
+│   │   ├── __init__.py
+│   │   ├── base.py                 # 基础CRUD操作
+│   │   ├── asset_crud.py           # 资产数据操作
+│   │   ├── alert_crud.py           # 告警数据操作
+│   │   └── user_crud.py            # 用户数据操作
+│   ├── schemas/                    # 数据验证与序列化
+│   │   ├── __init__.py
+│   │   ├── asset.py                # 资产相关Schema
+│   │   ├── alert.py                # 告警相关Schema
+│   │   └── common.py               # 通用Schema（分页、响应等）
+│   ├── tasks/                      # 异步任务（Celery）
+│   │   ├── __init__.py
+│   │   ├── log_sync.py             # 日志同步任务
+│   │   ├── system_update.py        # 系统更新任务
+│   │   └── celery_app.py           # Celery实例配置
+│   └── utils/                      # 工具函数
+│       ├── __init__.py
+│       ├── logger.py               # 日志工具
+│       ├── validator.py            # 数据验证工具
+│       └── encrypt.py              # 加密工具
+├── tests/                          # 测试目录
+│   ├── __init__.py
+│   ├── test_assets.py
+│   ├── test_alerts.py
+│   └── conftest.py                 # 测试配置
+├── migrations/                     # 数据库迁移脚本（Alembic）
+├── Dockerfile                      # 容器构建文件
+├── docker-compose.yml              # Docker Compose 编排文件
+├── requirements.txt                # 依赖清单
+├── README.md                       # 后端开发说明
+└── .env                            # 环境变量文件
+
+

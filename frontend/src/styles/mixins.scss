@@ -1,0 +1,160 @@
+/**
+ * SCSS Mixins - 常用的样式混合器
+ */
+
+// 清除浮动
+@mixin clearfix {
+  &::after {
+    content: "";
+    display: table;
+    clear: both;
+  }
+}
+
+// 文本省略号
+@mixin text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// 多行文本省略号
+@mixin text-ellipsis-multiline($lines: 2) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// 居中对齐
+@mixin center-flex {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// 绝对居中
+@mixin absolute-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+// 响应式断点
+@mixin mobile {
+  @media (max-width: 768px) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (min-width: 769px) and (max-width: 1024px) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: 1025px) {
+    @content;
+  }
+}
+
+// 卡片样式
+@mixin card-style {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+}
+
+// 按钮样式
+@mixin button-style($bg-color: #409eff, $text-color: white) {
+  background-color: $bg-color;
+  color: $text-color;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    opacity: 0.8;
+  }
+  
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
+// 输入框样式
+@mixin input-style {
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 14px;
+  transition: border-color 0.3s ease;
+  
+  &:focus {
+    border-color: #409eff;
+    outline: none;
+  }
+}
+
+// 表格样式
+@mixin table-style {
+  width: 100%;
+  border-collapse: collapse;
+  
+  th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ebeef5;
+  }
+  
+  th {
+    background-color: #f5f7fa;
+    font-weight: 500;
+  }
+  
+  tr:hover {
+    background-color: #f5f7fa;
+  }
+}
+
+// 加载动画
+@mixin loading-spinner {
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  animation: spin 1s linear infinite;
+}
+
+// 渐入动画
+@mixin fade-in($duration: 0.3s) {
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  animation: fadeIn $duration ease-in-out;
+}
+
+// 滑入动画
+@mixin slide-in-up($duration: 0.3s) {
+  @keyframes slideInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  animation: slideInUp $duration ease-out;
+}

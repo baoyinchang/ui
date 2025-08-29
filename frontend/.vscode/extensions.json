@@ -1,0 +1,105 @@
+{
+  "recommendations": [
+    // Vue开发
+    "Vue.volar",
+    "Vue.vscode-typescript-vue-plugin",
+    
+    // TypeScript
+    "ms-vscode.vscode-typescript-next",
+    
+    // 代码格式化和检查
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "stylelint.vscode-stylelint",
+    
+    // 自动导入和智能提示
+    "antfu.auto-import-es",
+    "antfu.iconify",
+    "antfu.unocss",
+    
+    // Git工具
+    "eamodio.gitlens",
+    "mhutchie.git-graph",
+    
+    // 文件图标
+    "vscode-icons-team.vscode-icons",
+    "pkief.material-icon-theme",
+    
+    // 主题
+    "zhuangtongfa.material-theme",
+    "GitHub.github-vscode-theme",
+    "dracula-theme.theme-dracula",
+    
+    // 代码片段
+    "hollowtree.vue-snippets",
+    "sdras.vue-vscode-snippets",
+    "xabikos.javascriptsnippets",
+    
+    // 开发工具
+    "bradlc.vscode-tailwindcss",
+    "formulahendry.auto-rename-tag",
+    "formulahendry.auto-close-tag",
+    "christian-kohler.path-intellisense",
+    "christian-kohler.npm-intellisense",
+    
+    // 调试工具
+    "ms-vscode.vscode-json",
+    "redhat.vscode-yaml",
+    "ms-vscode.hexeditor",
+    
+    // 文档和注释
+    "aaron-bond.better-comments",
+    "shd101wyy.markdown-preview-enhanced",
+    "yzhang.markdown-all-in-one",
+    
+    // 实用工具
+    "alefragnani.bookmarks",
+    "gruntfuggly.todo-tree",
+    "wayou.vscode-todo-highlight",
+    "streetsidesoftware.code-spell-checker",
+    
+    // 性能和分析
+    "ms-vscode.vscode-performance",
+    "wix.vscode-import-cost",
+    
+    // 协作工具
+    "ms-vsliveshare.vsliveshare",
+    
+    // 容器和部署
+    "ms-vscode-remote.remote-containers",
+    "ms-vscode-remote.remote-ssh",
+    
+    // 数据库
+    "mtxr.sqltools",
+    
+    // REST客户端
+    "humao.rest-client",
+    
+    // 颜色工具
+    "naumovs.color-highlight",
+    "bradlc.vscode-tailwindcss",
+    
+    // 括号配对
+    "coenraads.bracket-pair-colorizer-2",
+    
+    // 缩进指南
+    "oderwat.indent-rainbow",
+    
+    // 文件操作
+    "sleistner.vscode-fileutils",
+    
+    // 代码度量
+    "kisstkondoros.vscode-codemetrics",
+    
+    // 正则表达式
+    "chrmarti.regex",
+    
+    // 环境变量
+    "mikestead.dotenv"
+  ],
+  "unwantedRecommendations": [
+    "octref.vetur",
+    "hookyqr.beautify",
+    "ms-vscode.vscode-typescript-tslint-plugin"
+  ]
+}

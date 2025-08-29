@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>安全态势 - H-System EDR平台</title>
+    <style>
+        /* 基础样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+
+        body {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #f5f7fa;
+        }
+
+        /* 左侧菜单栏 */
+        .sidebar {
+            width: 220px;
+            background-color: #2c3e50;
+            color: white;
+            height: 100%;
+            transition: all 0.3s;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #34495e;
+        }
+
+        .sidebar-header h1 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .menu-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            border-left: 3px solid transparent;
+            text-decoration: none;
+            color: white;
+        }
+
+        .menu-item:hover {
+            background-color: #34495e;
+        }
+
+        .menu-item.active {
+            background-color: #34495e;
+            border-left-color: #3498db;
+        }
+
+        .menu-item i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* 右侧主内容区 */
+        .main-container {
+            flex: 1;
+            min-width: 0; /* 解决flex容器子元素溢出问题 */
+            width: calc(100% - 220px); /* 固定宽度，与侧边栏宽度互补 */
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .top-bar {
+            height: 60px;
+            background-color: white;
+            border-bottom: 1px solid #ecf0f1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .user-info img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            margin-right: 10px;
+            background-color: #ecf0f1;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: #f5f7fa;
+        }
+
+        /* 页面通用样式 */
+        .page-title {
+            font-size: 22px;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* 统计卡片 */
+        .stat-cards {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            flex: 1;
+            min-width: 200px;
+            background-color: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 15px;
+        }
+
+        .stat-card-title {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-card-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .stat-card-trend {
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .trend-up {
+            color: #e74c3c;
+        }
+
+        .trend-down {
+            color: #27ae60;
+        }
+
+        /* 布局样式 */
+        .two-columns {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .two-columns > div {
+            flex: 1;
+        }
+
+        .three-columns {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .three-columns > div {
+            flex: 1;
+        }
+
+        /* 图表容器 */
+        .chart-container {
+            height: 300px;
+            position: relative;
+        }
+
+        /* 告警列表样式 */
+        .alert-list {
+            list-style: none;
+        }
+
+        .alert-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #ecf0f1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .alert-item:last-child {
+            border-bottom: none;
+        }
+
+        .alert-info {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-weight: 500;
+            margin-bottom: 3px;
+        }
+
+        .alert-time {
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* 标签样式 */
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .tag-critical {
+            background-color: #fee2e2;
+            color: #dc2626;
+        }
+
+        .tag-high {
+            background-color: #fed7d7;
+            color: #b91c1c;
+        }
+
+        .tag-medium {
+            background-color: #fef3c7;
+            color: #d97706;
+        }
+
+        .tag-low {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        /* 资产状态分布 */
+        .asset-status {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .status-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .status-normal {
+            background-color: #27ae60;
+        }
+
+        .status-warning {
+            background-color: #f39c12;
+        }
+
+        .status-danger {
+            background-color: #e74c3c;
+        }
+
+        .status-offline {
+            background-color: #95a5a6;
+        }
+
+        .status-text {
+            flex: 1;
+        }
+
+        .status-percentage {
+            font-weight: 500;
+        }
+
+        /* 提示消息样式 */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            z-index: 9999;
+            animation: fadeIn 0.3s, fadeOut 0.3s 2.7s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+    </style>
+    <!-- 引入Font Awesome图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- 引入Chart.js用于图表展示 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- 左侧菜单栏 -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h1>H-System EDR平台</h1>
+        </div>
+        <div class="menu-list">
+            <a href="index.html" class="menu-item active">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>安全态势</span>
+            </a>
+            <a href="alert-center.html" class="menu-item">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>告警中心</span>
+            </a>
+            <a href="investigation.html" class="menu-item">
+                <i class="fas fa-search"></i>
+                <span>调查与响应</span>
+            </a>
+            <a href="asset-management.html" class="menu-item">
+                <i class="fas fa-desktop"></i>
+                <span>资产管理</span>
+            </a>
+            <a href="threat-hunting.html" class="menu-item">
+                <i class="fas fa-crosshairs"></i>
+                <span>威胁狩猎</span>
+            </a>
+            <a href="threat-intelligence.html" class="menu-item">
+                <i class="fas fa-shield-alt"></i>
+                <span>威胁情报</span>
+            </a>
+            <a href="report-center.html" class="menu-item">
+                <i class="fas fa-file-alt"></i>
+                <span>报告中心</span>
+            </a>
+            <a href="system-management.html" class="menu-item">
+                <i class="fas fa-cog"></i>
+                <span>系统管理</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 右侧主内容区 -->
+    <div class="main-container">
+        <div class="top-bar">
+            <div class="breadcrumbs">当前位置: <span id="breadcrumb">安全态势</span></div>
+            <div class="user-info">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='30' r='20' fill='%233498db'/%3E%3Cpath d='M10,90 C10,65 30,55 50,55 C70,55 90,65 90,90' fill='%233498db'/%3E%3C/svg%3E" alt="用户头像">
+                <span>安全分析师</span>
+            </div>
+        </div>
+
+        <div class="content-area">
+            <h2 class="page-title">安全态势总览</h2>
+            
+            <!-- 关键安全指标 -->
+            <div class="stat-cards">
+                <div class="stat-card">
+                    <div class="stat-card-title">今日新增告警</div>
+                    <div class="stat-card-value">24</div>
+                    <div class="stat-card-trend trend-up"><i class="fas fa-arrow-up"></i> 8 较昨日</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-title">未处理告警</div>
+                    <div class="stat-card-value">16</div>
+                    <div class="stat-card-trend trend-down"><i class="fas fa-arrow-down"></i> 4 较昨日</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-title">受影响资产</div>
+                    <div class="stat-card-value">7</div>
+                    <div class="stat-card-trend trend-up"><i class="fas fa-arrow-up"></i> 2 较昨日</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-title">活跃威胁狩猎任务</div>
+                    <div class="stat-card-value">8</div>
+                    <div class="stat-card-trend trend-up"><i class="fas fa-arrow-up"></i> 2 较昨日</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-title">已处理安全事件</div>
+                    <div class="stat-card-value">32</div>
+                    <div class="stat-card-trend trend-down"><i class="fas fa-arrow-down"></i> 5 较昨日</div>
+                </div>
+            </div>
+
+            <!-- 图表区域 -->
+            <div class="two-columns">
+                <div class="card">
+                    <h3 style="margin-bottom: 15px;">告警趋势（近7天）</h3>
+                    <div class="chart-container">
+                        <canvas id="alertTrendChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3 style="margin-bottom: 15px;">告警级别分布</h3>
+                    <div class="chart-container">
+                        <canvas id="alertLevelChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="two-columns">
+                <div class="card">
+                    <h3 style="margin-bottom: 15px;">威胁类型分布</h3>
+                    <div class="chart-container">
+                        <canvas id="threatTypeChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3 style="margin-bottom: 15px;">资产状态分布</h3>
+                    <div class="chart-container">
+                        <div style="padding: 20px;">
+                            <div class="asset-status">
+                                <div class="status-color status-normal"></div>
+                                <div class="status-text">正常资产</div>
+                                <div class="status-percentage">87%</div>
+                            </div>
+                            <div class="asset-status">
+                                <div class="status-color status-warning"></div>
+                                <div class="status-text">需关注资产</div>
+                                <div class="status-percentage">8%</div>
+                            </div>
+                            <div class="asset-status">
+                                <div class="status-color status-danger"></div>
+                                <div class="status-text">受威胁资产</div>
+                                <div class="status-percentage">3%</div>
+                            </div>
+                            <div class="asset-status">
+                                <div class="status-color status-offline"></div>
+                                <div class="status-text">离线资产</div>
+                                <div class="status-percentage">2%</div>
+                            </div>
+                            
+                            <div style="margin-top: 30px;">
+                                <h4 style="margin-bottom: 15px;">资产总数：2,456</h4>
+                                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                    <div style="flex: 1; text-align: center; padding: 10px; background-color: #f8f9fa; border-radius: 4px;">
+                                        <div style="font-size: 14px; color: #666;">服务器</div>
+                                        <div style="font-size: 20px; font-weight: bold; margin-top: 5px;">342</div>
+                                    </div>
+                                    <div style="flex: 1; text-align: center; padding: 10px; background-color: #f8f9fa; border-radius: 4px;">
+                                        <div style="font-size: 14px; color: #666;">工作站</div>
+                                        <div style="font-size: 20px; font-weight: bold; margin-top: 5px;">1,876</div>
+                                    </div>
+                                    <div style="flex: 1; text-align: center; padding: 10px; background-color: #f8f9fa; border-radius: 4px;">
+                                        <div style="font-size: 14px; color: #666;">移动设备</div>
+                                        <div style="font-size: 20px; font-weight: bold; margin-top: 5px;">238</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 最近告警 -->
+            <div class="card">
+                <h3 style="margin-bottom: 15px;">最近高优先级告警</h3>
+                <ul class="alert-list">
+                    <li class="alert-item">
+                        <div class="alert-info">
+                            <div class="alert-title">检测到Emotet恶意软件活动</div>
+                            <div class="alert-time">主机：WIN-SERVER-01 | 时间：2025-08-27 14:32:15</div>
+                        </div>
+                        <span class="tag tag-critical">紧急</span>
+                    </li>
+                    <li class="alert-item">
+                        <div class="alert-info">
+                            <div class="alert-title">可疑PowerShell编码命令执行</div>
+                            <div class="alert-time">主机：DESKTOP-8F3K29A | 时间：2025-08-27 13:45:02</div>
+                        </div>
+                        <span class="tag tag-high">高危</span>
+                    </li>
+                    <li class="alert-item">
+                        <div class="alert-info">
+                            <div class="alert-title">检测到横向移动尝试</div>
+                            <div class="alert-time">主机：SRV-DB-02 | 时间：2025-08-27 11:23:45</div>
+                        </div>
+                        <span class="tag tag-high">高危</span>
+                    </li>
+                    <li class="alert-item">
+                        <div class="alert-info">
+                            <div class="alert-title">异常注册表持久化项创建</div>
+                            <div class="alert-time">主机：DESKTOP-USER05 | 时间：2025-08-27 10:15:32</div>
+                        </div>
+                        <span class="tag tag-medium">中危</span>
+                    </li>
+                    <li class="alert-item">
+                        <div class="alert-info">
+                            <div class="alert-title">与已知恶意IP的连接尝试</div>
+                            <div class="alert-time">主机：LAPTOP-SALES03 | 时间：2025-08-27 09:08:17</div>
+                        </div>
+                        <span class="tag tag-medium">中危</span>
+                    </li>
+                </ul>
+                <div style="text-align: right; margin-top: 15px;">
+                    <a href="alert-center.html" style="color: #3498db; text-decoration: none;">查看全部告警 <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载完成后初始化图表
+        document.addEventListener('DOMContentLoaded', function() {
+            // 告警趋势图表
+            const alertTrendCtx = document.getElementById('alertTrendChart').getContext('2d');
+            const alertTrendChart = new Chart(alertTrendCtx, {
+                type: 'line',
+                data: {
+                    labels: ['8/21', '8/22', '8/23', '8/24', '8/25', '8/26', '8/27'],
+                    datasets: [{
+                        label: '紧急',
+                        data: [3, 2, 5, 4, 3, 6, 5],
+                        borderColor: '#dc2626',
+                        backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }, {
+                        label: '高危',
+                        data: [8, 10, 7, 9, 12, 8, 9],
+                        borderColor: '#b91c1c',
+                        backgroundColor: 'rgba(185, 28, 28, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }, {
+                        label: '中危',
+                        data: [15, 12, 18, 14, 16, 19, 15],
+                        borderColor: '#d97706',
+                        backgroundColor: 'rgba(217, 119, 6, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // 告警级别分布图表
+            const alertLevelCtx = document.getElementById('alertLevelChart').getContext('2d');
+            const alertLevelChart = new Chart(alertLevelCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['紧急', '高危', '中危', '低危'],
+                    datasets: [{
+                        data: [12, 35, 68, 45],
+                        backgroundColor: [
+                            '#dc2626',
+                            '#b91c1c',
+                            '#d97706',
+                            '#1e40af'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                        }
+                    }
+                }
+            });
+
+            // 威胁类型分布图表
+            const threatTypeCtx = document.getElementById('threatTypeChart').getContext('2d');
+            const threatTypeChart = new Chart(threatTypeCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['恶意软件', '可疑脚本', '横向移动', '持久化', '数据渗出', '暴力破解'],
+                    datasets: [{
+                        label: '告警数量',
+                        data: [42, 38, 15, 24, 8, 22],
+                        backgroundColor: [
+                            'rgba(220, 38, 38, 0.7)',
+                            'rgba(185, 28, 28, 0.7)',
+                            'rgba(217, 119, 6, 0.7)',
+                            'rgba(59, 130, 246, 0.7)',
+                            'rgba(16, 185, 129, 0.7)',
+                            'rgba(139, 92, 246, 0.7)'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // 绑定菜单点击事件
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    // 移除所有菜单的active类
+                    menuItems.forEach(menu => menu.classList.remove('active'));
+                    // 给当前点击的菜单添加active类
+                    this.classList.add('active');
+                    
+                    // 更新面包屑
+                    document.getElementById('breadcrumb').textContent = this.querySelector('span').textContent;
+                });
+            });
+        });
+
+        // 显示提示消息
+        function showToast(message) {
+            // 检查是否已有toast，如有则移除
+            const existingToast = document.querySelector('.toast');
+            if (existingToast) {
+                existingToast.remove();
+            }
+            
+            // 创建新toast
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            // 3秒后移除
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
+    

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>H-System EDR 连接测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #results {
+            margin-top: 20px;
+        }
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 H-System EDR 连接测试</h1>
+    
+    <div class="test-card">
+        <h2>服务状态检查</h2>
+        <button onclick="testFrontend()">测试前端 (3000端口)</button>
+        <button onclick="testBackend()">测试后端 (8000端口)</button>
+        <button onclick="testAPI()">测试API接口</button>
+        <button onclick="testAll()">全部测试</button>
+        <button onclick="clearResults()">清除结果</button>
+    </div>
+    
+    <div id="results"></div>
+
+    <script>
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log';
+            logEntry.innerHTML = `[${timestamp}] ${message}`;
+            results.appendChild(logEntry);
+            results.scrollTop = results.scrollHeight;
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function testFrontend() {
+            log('🔍 测试前端服务 (http://192.168.100.123:3000)...');
+            try {
+                const response = await fetch('http://192.168.100.123:3000', {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+                
+                if (response.ok) {
+                    const text = await response.text();
+                    log(`✅ 前端服务正常 (状态码: ${response.status})`);
+                    if (text.includes('<!DOCTYPE html') || text.includes('<html')) {
+                        log('✅ 返回HTML页面');
+                    } else {
+                        log(`⚠️ 响应内容异常: ${text.substring(0, 100)}...`);
+                    }
+                } else {
+                    log(`❌ 前端服务响应异常 (状态码: ${response.status})`);
+                }
+            } catch (error) {
+                log(`❌ 前端服务连接失败: ${error.message}`);
+                log('💡 请检查前端服务是否启动: npm run dev');
+            }
+        }
+
+        async function testBackend() {
+            log('🔍 测试后端服务 (http://192.168.100.123:8000)...');
+            try {
+                const response = await fetch('http://192.168.100.123:8000', {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+                
+                if (response.ok) {
+                    const text = await response.text();
+                    log(`✅ 后端服务正常 (状态码: ${response.status})`);
+                    log(`📄 响应内容: ${text}`);
+                } else {
+                    log(`❌ 后端服务响应异常 (状态码: ${response.status})`);
+                }
+            } catch (error) {
+                log(`❌ 后端服务连接失败: ${error.message}`);
+                log('💡 请检查后端服务是否启动');
+            }
+        }
+
+        async function testAPI() {
+            log('🔍 测试API接口...');
+            
+            const endpoints = [
+                'http://192.168.100.123:8000/',
+                'http://192.168.100.123:8000/api/v1/',
+                'http://192.168.100.123:8000/docs'
+            ];
+            
+            for (const endpoint of endpoints) {
+                try {
+                    log(`   测试: ${endpoint}`);
+                    const response = await fetch(endpoint, {
+                        method: 'GET',
+                        mode: 'cors'
+                    });
+                    
+                    if (response.ok) {
+                        log(`   ✅ ${endpoint} (${response.status})`);
+                    } else {
+                        log(`   ❌ ${endpoint} (${response.status})`);
+                    }
+                } catch (error) {
+                    log(`   ❌ ${endpoint} - ${error.message}`);
+                }
+            }
+        }
+
+        async function testAll() {
+            log('🚀 开始全面测试...');
+            await testFrontend();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await testBackend();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await testAPI();
+            log('✅ 全面测试完成');
+        }
+
+        // 页面加载时自动测试
+        window.onload = function() {
+            log('📄 测试页面已加载');
+            log('💡 点击按钮开始测试服务连接状态');
+        };
+    </script>
+</body>
+</html>

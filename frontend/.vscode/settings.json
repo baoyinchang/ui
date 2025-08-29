@@ -1,0 +1,198 @@
+{
+  // 编辑器配置
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": false,
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true,
+    "source.organizeImports": false
+  },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.rulers": [100, 120],
+  "editor.wordWrap": "wordWrapColumn",
+  "editor.wordWrapColumn": 100,
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": true,
+  "editor.inlineSuggest.enabled": true,
+  "editor.suggestSelection": "first",
+  "editor.quickSuggestions": {
+    "strings": true
+  },
+
+  // 文件配置
+  "files.eol": "\n",
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  "files.autoSave": "onFocusChange",
+  "files.associations": {
+    "*.vue": "vue",
+    "*.json": "jsonc",
+    "*.wxss": "css",
+    "*.wxml": "html"
+  },
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.git": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    "**/*.crx": true,
+    "**/*.pem": true
+  },
+
+  // 搜索配置
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/*.log": true,
+    "**/.git": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    "**/.vscode": false
+  },
+
+  // TypeScript配置
+  "typescript.preferences.quoteStyle": "single",
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "typescript.suggest.autoImports": true,
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "typescript.inlayHints.parameterNames.enabled": "literals",
+  "typescript.inlayHints.parameterTypes.enabled": true,
+  "typescript.inlayHints.variableTypes.enabled": true,
+  "typescript.inlayHints.propertyDeclarationTypes.enabled": true,
+  "typescript.inlayHints.functionLikeReturnTypes.enabled": true,
+
+  // JavaScript配置
+  "javascript.preferences.quoteStyle": "single",
+  "javascript.preferences.importModuleSpecifier": "relative",
+  "javascript.suggest.autoImports": true,
+  "javascript.updateImportsOnFileMove.enabled": "always",
+
+  // Vue配置
+  "vetur.format.defaultFormatter.html": "prettier",
+  "vetur.format.defaultFormatter.css": "prettier",
+  "vetur.format.defaultFormatter.postcss": "prettier",
+  "vetur.format.defaultFormatter.scss": "prettier",
+  "vetur.format.defaultFormatter.less": "prettier",
+  "vetur.format.defaultFormatter.stylus": "stylus-supremacy",
+  "vetur.format.defaultFormatter.js": "prettier",
+  "vetur.format.defaultFormatter.ts": "prettier",
+  "vetur.validation.template": false,
+  "vetur.validation.script": false,
+  "vetur.validation.style": false,
+
+  // Volar配置
+  "vue.codeActions.enabled": true,
+  "vue.complete.casing.tags": "pascal",
+  "vue.complete.casing.props": "camel",
+  "vue.inlayHints.missingProps": true,
+  "vue.inlayHints.inlineHandlerLeading": true,
+  "vue.inlayHints.optionsWrapper": true,
+
+  // ESLint配置
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact",
+    "vue"
+  ],
+  "eslint.options": {
+    "extensions": [".js", ".jsx", ".ts", ".tsx", ".vue"]
+  },
+
+  // Prettier配置
+  "prettier.requireConfig": true,
+  "prettier.useEditorConfig": false,
+
+  // CSS配置
+  "css.validate": true,
+  "less.validate": true,
+  "scss.validate": true,
+  "css.lint.unknownAtRules": "ignore",
+
+  // HTML配置
+  "html.format.enable": true,
+  "html.format.wrapLineLength": 120,
+  "html.format.wrapAttributes": "force-aligned",
+
+  // JSON配置
+  "json.format.enable": true,
+  "json.maxItemsComputed": 5000,
+
+  // 终端配置
+  "terminal.integrated.fontSize": 14,
+  "terminal.integrated.fontFamily": "Consolas, 'Courier New', monospace",
+  "terminal.integrated.shell.windows": "powershell.exe",
+  "terminal.integrated.defaultProfile.windows": "PowerShell",
+
+  // Git配置
+  "git.enableSmartCommit": true,
+  "git.confirmSync": false,
+  "git.autofetch": true,
+  "git.autofetchPeriod": 180,
+
+  // 扩展配置
+  "extensions.ignoreRecommendations": false,
+  "extensions.showRecommendationsOnlyOnDemand": false,
+
+  // 工作台配置
+  "workbench.iconTheme": "vscode-icons",
+  "workbench.colorTheme": "One Dark Pro",
+  "workbench.editor.enablePreview": false,
+  "workbench.editor.enablePreviewFromQuickOpen": false,
+  "workbench.startupEditor": "newUntitledFile",
+
+  // 调试配置
+  "debug.console.fontSize": 14,
+  "debug.inlineValues": "auto",
+
+  // 性能配置
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/dist/**": true,
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true
+  },
+
+  // 语言特定配置
+  "[vue]": {
+    "editor.defaultFormatter": "Vue.volar"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[html]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[css]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[scss]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[less]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.wordWrap": "on",
+    "editor.quickSuggestions": {
+      "comments": "off",
+      "strings": "off",
+      "other": "off"
+    }
+  }
+}

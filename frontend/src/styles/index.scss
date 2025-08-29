@@ -1,0 +1,142 @@
+/**
+ * 全局样式文件
+ */
+
+@use "mixins.scss" as *;
+@use "@/assets/css/variables.scss" as *;
+
+// 全局重置样式
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: $text-color-primary;
+  background-color: $background-color-base;
+}
+
+// 通用类
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+.flex { display: flex; }
+.flex-center { @include center-flex; }
+.flex-column { flex-direction: column; }
+.flex-wrap { flex-wrap: wrap; }
+
+.mt-10 { margin-top: 10px; }
+.mt-20 { margin-top: 20px; }
+.mb-10 { margin-bottom: 10px; }
+.mb-20 { margin-bottom: 20px; }
+
+.p-10 { padding: 10px; }
+.p-20 { padding: 20px; }
+
+// 页面容器
+.page-container {
+  padding: 20px;
+  min-height: calc(100vh - 60px);
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid $border-color-light;
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: 500;
+  color: $text-color-primary;
+  margin: 0;
+}
+
+.page-content {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+// 卡片样式
+.card {
+  @include card-style;
+}
+
+// 按钮样式
+.btn {
+  @include button-style;
+}
+
+.btn-primary {
+  @include button-style($primary-color, white);
+}
+
+.btn-success {
+  @include button-style($success-color, white);
+}
+
+.btn-warning {
+  @include button-style($warning-color, white);
+}
+
+.btn-danger {
+  @include button-style($danger-color, white);
+}
+
+// 表单样式
+.form-item {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 500;
+  color: $text-color-regular;
+}
+
+.form-input {
+  @include input-style;
+  width: 100%;
+}
+
+// 表格样式
+.table {
+  @include table-style;
+}
+
+// 工具类
+.loading {
+  @include loading-spinner;
+}
+
+.fade-in {
+  @include fade-in;
+}
+
+.slide-in-up {
+  @include slide-in-up;
+}
+
+// 响应式
+@include mobile {
+  .page-container {
+    padding: 10px;
+  }
+  
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+}

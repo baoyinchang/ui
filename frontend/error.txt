@@ -1,0 +1,47 @@
+vue-router.mjs:51  [Vue Router warn]: uncaught error during route navigation:
+warn @ vue-router.mjs:51
+vue-router.mjs:3623  SyntaxError: The requested module '/node_modules/.vite/deps/@element-plus_icons-vue.js?v=2ae9f0d4' does not provide an export named 'CircleFilled' (at StatusTag.vue:26:10)
+triggerError @ vue-router.mjs:3623
+vue-router.mjs:51  [Vue Router warn]: Unexpected error when starting the router: SyntaxError: The requested module '/node_modules/.vite/deps/@element-plus_icons-vue.js?v=2ae9f0d4' does not provide an export named 'CircleFilled' (at StatusTag.vue:26:10)
+warn @ vue-router.mjs:51
+
+
+
+ARIA roles used must conform to valid values: Role must be one of the valid ARIA roles: bar
+<div class="bar" role="bar" style="transform: translate3d(-22.5216%, 0px, 0px); transition: 500ms;">
+打开方式 元素
+请求
+http://192.168.100.123:3000/
+进一步阅读
+Learn more about this axe rule at Deque University
+了解这一点很重要的原因及在 webhint.io 上修复的方法
+
+
+main.ts:26  [Vue Router warn]: uncaught error during route navigation:
+warn @ vue-router.mjs:51
+triggerError @ vue-router.mjs:3621
+(匿名) @ vue-router.mjs:3334
+Promise.catch
+pushWithRedirect @ vue-router.mjs:3328
+pushWithRedirect @ vue-router.mjs:3303
+push @ vue-router.mjs:3260
+install @ vue-router.mjs:3704
+use @ runtime-core.esm-bundler.js:3901
+(匿名) @ main.ts:26
+main.ts:26  SyntaxError: The requested module '/src/utils/constants.ts?t=1756459083803' does not provide an export named 'INVESTIGATION_PRIORITY' (at StatusTag.vue:34:3)
+triggerError @ vue-router.mjs:3623
+(匿名) @ vue-router.mjs:3334
+Promise.catch
+pushWithRedirect @ vue-router.mjs:3328
+pushWithRedirect @ vue-router.mjs:3303
+push @ vue-router.mjs:3260
+install @ vue-router.mjs:3704
+use @ runtime-core.esm-bundler.js:3901
+(匿名) @ main.ts:26
+main.ts:26  [Vue Router warn]: Unexpected error when starting the router: SyntaxError: The requested module '/src/utils/constants.ts?t=1756459083803' does not provide an export named 'INVESTIGATION_PRIORITY' (at StatusTag.vue:34:3)
+warn @ vue-router.mjs:51
+(匿名) @ vue-router.mjs:3706
+Promise.catch
+install @ vue-router.mjs:3704
+use @ runtime-core.esm-bundler.js:3901
+(匿名) @ main.ts:26

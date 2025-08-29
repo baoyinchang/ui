@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户管理页面调试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .debug-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .code-block {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 用户管理页面调试工具</h1>
+    
+    <div class="debug-section">
+        <h2>环境检查</h2>
+        <button onclick="checkEnvironment()">检查环境变量</button>
+        <button onclick="checkAPI()">检查API状态</button>
+        <div id="env-results"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>页面状态检查</h2>
+        <button onclick="checkPageStatus()">检查页面状态</button>
+        <button onclick="checkNetworkRequests()">检查网络请求</button>
+        <div id="page-results"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>手动测试</h2>
+        <button onclick="testMockAPI()">测试模拟API</button>
+        <button onclick="forceReload()">强制重新加载</button>
+        <div id="test-results"></div>
+    </div>
+
+    <script>
+        function log(containerId, message, type = 'info') {
+            const container = document.getElementById(containerId);
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `status ${type}`;
+            logEntry.innerHTML = `[${timestamp}] ${message}`;
+            container.appendChild(logEntry);
+        }
+
+        function clearResults(containerId) {
+            document.getElementById(containerId).innerHTML = '';
+        }
+
+        function checkEnvironment() {
+            clearResults('env-results');
+            log('env-results', '🔍 检查环境变量...', 'info');
+            
+            const commands = `
+// 在主应用页面控制台运行以下命令：
+
+// 1. 检查环境变量
+console.log('VITE_ENABLE_AUTH:', import.meta.env.VITE_ENABLE_AUTH);
+console.log('NODE_ENV:', import.meta.env.NODE_ENV);
+console.log('所有环境变量:', import.meta.env);
+
+// 2. 检查当前路由
+console.log('当前路由:', $route.path);
+console.log('路由参数:', $route.params);
+console.log('路由查询:', $route.query);
+            `;
+            
+            const codeBlock = document.createElement('div');
+            codeBlock.className = 'code-block';
+            codeBlock.textContent = commands;
+            document.getElementById('env-results').appendChild(codeBlock);
+        }
+
+        function checkAPI() {
+            clearResults('env-results');
+            log('env-results', '🔍 检查API状态...', 'info');
+            
+            const commands = `
+// 在主应用页面控制台运行以下命令：
+
+// 1. 检查API导入
+try {
+    // 这需要在Vue组件内部运行
+    console.log('API检查需要在用户管理页面的Vue组件内运行');
+} catch (error) {
+    console.error('API检查失败:', error);
+}
+
+// 2. 手动测试API调用
+fetch('/api/users', {
+    method: 'GET',
+    headers: {
+        'Content-Type': 'application/json'
+    }
+}).then(response => {
+    console.log('API响应状态:', response.status);
+    return response.json();
+}).then(data => {
+    console.log('API响应数据:', data);
+}).catch(error => {
+    console.error('API调用失败:', error);
+});
+            `;
+            
+            const codeBlock = document.createElement('div');
+            codeBlock.className = 'code-block';
+            codeBlock.textContent = commands;
+            document.getElementById('env-results').appendChild(codeBlock);
+        }
+
+        function checkPageStatus() {
+            clearResults('page-results');
+            log('page-results', '🔍 检查页面状态...', 'info');
+            
+            const commands = `
+// 在用户管理页面控制台运行：
+
+// 1. 检查页面元素
+const userContainer = document.querySelector('.users-container');
+console.log('用户容器:', userContainer ? '存在' : '不存在');
+
+const loadingElements = document.querySelectorAll('.el-loading-mask');
+console.log('加载遮罩数量:', loadingElements.length);
+
+const tableRows = document.querySelectorAll('.el-table__row');
+console.log('表格行数:', tableRows.length);
+
+// 2. 检查Vue组件状态
+if (window.__VUE_DEVTOOLS_GLOBAL_HOOK__) {
+    console.log('Vue DevTools可用');
+} else {
+    console.log('Vue DevTools不可用');
+}
+
+// 3. 检查错误信息
+const errors = document.querySelectorAll('.el-message--error');
+console.log('错误消息数量:', errors.length);
+            `;
+            
+            const codeBlock = document.createElement('div');
+            codeBlock.className = 'code-block';
+            codeBlock.textContent = commands;
+            document.getElementById('page-results').appendChild(codeBlock);
+        }
+
+        function checkNetworkRequests() {
+            clearResults('page-results');
+            log('page-results', '🔍 检查网络请求...', 'info');
+            
+            log('page-results', '请打开浏览器开发者工具的Network标签页，然后刷新用户管理页面', 'info');
+            log('page-results', '查看是否有失败的请求或长时间pending的请求', 'warning');
+        }
+
+        function testMockAPI() {
+            clearResults('test-results');
+            log('test-results', '🧪 测试模拟API...', 'info');
+            
+            const commands = `
+// 在用户管理页面控制台运行：
+
+// 1. 直接调用模拟API
+import { mockUsersApi } from '@/api/mock/users';
+
+// 测试获取用户列表
+mockUsersApi.getUsers().then(result => {
+    console.log('模拟API测试成功:', result);
+}).catch(error => {
+    console.error('模拟API测试失败:', error);
+});
+
+// 2. 测试统计数据
+mockUsersApi.getUserStatistics().then(stats => {
+    console.log('统计数据:', stats);
+}).catch(error => {
+    console.error('统计数据获取失败:', error);
+});
+            `;
+            
+            const codeBlock = document.createElement('div');
+            codeBlock.className = 'code-block';
+            codeBlock.textContent = commands;
+            document.getElementById('test-results').appendChild(codeBlock);
+        }
+
+        function forceReload() {
+            clearResults('test-results');
+            log('test-results', '🔄 强制重新加载...', 'info');
+            
+            const commands = `
+// 在用户管理页面控制台运行：
+
+// 1. 强制重新加载组件数据
+if (typeof loadData === 'function') {
+    loadData();
+    console.log('已调用loadData函数');
+} else {
+    console.log('loadData函数不可用');
+}
+
+// 2. 清除所有缓存并刷新
+localStorage.clear();
+sessionStorage.clear();
+location.reload(true);
+            `;
+            
+            const codeBlock = document.createElement('div');
+            codeBlock.className = 'code-block';
+            codeBlock.textContent = commands;
+            document.getElementById('test-results').appendChild(codeBlock);
+        }
+
+        // 页面加载时的提示
+        window.onload = function() {
+            log('env-results', '📄 调试工具已加载', 'success');
+            log('env-results', '💡 请在主应用页面打开开发者工具，然后使用此页面的按钮生成调试命令', 'info');
+        };
+    </script>
+</body>
+</html>

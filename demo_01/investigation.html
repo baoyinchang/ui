@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>调查与响应 - H-System EDR平台</title>
+    <style>
+        /* 基础样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+
+        body {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #f5f7fa;
+        }
+
+        /* 左侧菜单栏 */
+        .sidebar {
+            width: 220px;
+            background-color: #2c3e50;
+            color: white;
+            height: 100%;
+            transition: all 0.3s;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #34495e;
+        }
+
+        .sidebar-header h1 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .menu-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            border-left: 3px solid transparent;
+            text-decoration: none;
+            color: white;
+        }
+
+        .menu-item:hover {
+            background-color: #34495e;
+        }
+
+        .menu-item.active {
+            background-color: #34495e;
+            border-left-color: #3498db;
+        }
+
+        .menu-item i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* 右侧主内容区 */
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .top-bar {
+            height: 60px;
+            background-color: white;
+            border-bottom: 1px solid #ecf0f1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .user-info img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            margin-right: 10px;
+            background-color: #ecf0f1;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: #f5f7fa;
+        }
+
+        /* 页面通用样式 */
+        .page-title {
+            font-size: 22px;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* 调查会话样式 */
+        .investigation-sessions {
+            margin-bottom: 25px;
+        }
+
+        .session-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .session-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .session-card {
+            border: 1px solid #ecf0f1;
+            border-radius: 6px;
+            padding: 15px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .session-card:hover {
+            border-color: #3498db;
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.15);
+        }
+
+        .session-card.active {
+            border-color: #3498db;
+            background-color: rgba(52, 152, 219, 0.05);
+        }
+
+        .session-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+
+        .session-meta {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .new-session-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* 调查工作区 */
+        .investigation-workspace {
+            display: flex;
+            gap: 20px;
+            height: calc(100% - 300px);
+        }
+
+        .timeline-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .details-panel {
+            width: 380px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #ecf0f1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .panel-content {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        /* 时间线样式 */
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 6px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: #e9ecef;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -30px;
+            top: 3px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background-color: #3498db;
+            border: 2px solid white;
+        }
+
+        .timeline-item.critical::before {
+            background-color: #e74c3c;
+        }
+
+        .timeline-item.high::before {
+            background-color: #e67e22;
+        }
+
+        .timeline-item.medium::before {
+            background-color: #f39c12;
+        }
+
+        .timeline-time {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .timeline-content {
+            background-color: #f8fafc;
+            border-radius: 4px;
+            padding: 10px 15px;
+            border-left: 3px solid #3498db;
+        }
+
+        .timeline-item.critical .timeline-content {
+            border-left-color: #e74c3c;
+        }
+
+        .timeline-item.high .timeline-content {
+            border-left-color: #e67e22;
+        }
+
+        .timeline-item.medium .timeline-content {
+            border-left-color: #f39c12;
+        }
+
+        .timeline-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .timeline-description {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* 实体详情样式 */
+        .entity-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .entity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #3498db;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+        }
+
+        .entity-info h3 {
+            font-size: 16px;
+            margin-bottom: 3px;
+        }
+
+        .entity-meta {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .entity-section {
+            margin-bottom: 20px;
+        }
+
+        .entity-section-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #495057;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .attribute-list {
+            list-style: none;
+        }
+
+        .attribute-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f3f5;
+            display: flex;
+        }
+
+        .attribute-name {
+            width: 110px;
+            color: #666;
+            font-size: 13px;
+        }
+
+        .attribute-value {
+            flex: 1;
+            font-size: 13px;
+        }
+
+        /* 响应行动面板 */
+        .response-actions {
+            background-color: #f8fafc;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .action-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            padding: 10px 15px;
+            background-color: white;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            text-align: left;
+            cursor: pointer;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+        }
+
+        .action-button:hover {
+            border-color: #3498db;
+            background-color: #f1f7fd;
+        }
+
+        .action-button.danger {
+            border-color: #f8d7da;
+        }
+
+        .action-button.danger:hover {
+            background-color: #fef2f2;
+            border-color: #e74c3c;
+        }
+
+        /* 搜索与筛选样式 */
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .search-filters {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .filter-tag {
+            background-color: #eef2f7;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .filter-tag-remove {
+            cursor: pointer;
+            color: #666;
+        }
+
+        /* 按钮样式 */
+        .btn {
+            padding: 6px 12px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+
+        .btn-warning {
+            background-color: #f39c12;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background-color: #d35400;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid #3498db;
+            color: #3498db;
+        }
+
+        .btn-outline:hover {
+            background-color: #3498db;
+            color: white;
+        }
+
+        /* Tab Navigation */
+        .tab-nav { display: flex; border-bottom: 2px solid #dee2e6; margin-bottom: 20px; }
+        .tab-item { padding: 10px 20px; cursor: pointer; font-size: 16px; color: #6c757d; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: color 0.2s, border-color 0.2s; }
+        .tab-item:hover { color: #34495e; }
+        .tab-item.active { color: #3498db; border-bottom-color: #3498db; font-weight: 600; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeInContent 0.5s; }
+        @keyframes fadeInContent { from { opacity: 0; } to { opacity: 1; } }
+        
+        
+        /* 弹窗样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 6px;
+            width: 80%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .modal-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #ecf0f1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-size: 18px;
+            color: #2c3e50;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid #ecf0f1;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        textarea.form-control {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        /* 标签样式 */
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .tag-critical {
+            background-color: #fee2e2;
+            color: #dc2626;
+        }
+
+        .tag-high {
+            background-color: #fed7d7;
+            color: #b91c1c;
+        }
+
+        .tag-medium {
+            background-color: #fef3c7;
+            color: #d97706;
+        }
+
+        .tag-low {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        /* 提示消息样式 */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            z-index: 9999;
+            animation: fadeIn 0.3s, fadeOut 0.3s 2.7s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        /* 关联实体图 */
+        .entity-graph {
+            height: 300px;
+            background-color: #f8fafc;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .graph-placeholder {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .graph-placeholder i {
+            font-size: 32px;
+            margin-bottom: 10px;
+            color: #adb5bd;
+        }
+        
+         /* Styles for Response Actions Tab */
+        .response-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .action-card { padding: 0; }
+        .action-card h3 { font-size: 16px; padding: 15px; border-bottom: 1px solid #ecf0f1; }
+        .action-card-body { padding: 15px; }
+        .host-status { display: flex; align-items: center; gap: 10px; padding: 10px; background-color: #f8f9fa; border-radius: 4px; margin-bottom: 15px; }
+        .status-indicator { width: 12px; height: 12px; border-radius: 50%; }
+        .status-contained { background-color: #e74c3c; }
+        .status-normal { background-color: #27ae60; }
+        .remote-shell { background-color: #000; color: #0f0; font-family: 'Courier New', Courier, monospace; height: 400px; padding: 15px; border-radius: 6px; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word; }
+        .shell-prompt { color: #0f0; }
+        .shell-output { color: #fff; }
+        .shell-cursor { background-color: #0f0; animation: blink 1s step-end infinite; display: inline-block; width: 8px; }
+        @keyframes blink { 50% { opacity: 0; } }
+        
+        
+         /* Styles for Incident Management Tab */
+        .data-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px; }
+        .data-table th, .data-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ecf0f1; }
+        .data-table th { background-color: #f8f9fa; font-weight: 600; color: #495057; }
+        .data-table tr:hover { background-color: #f8f9fa; }
+        .table-actions { display: flex; gap: 8px; }
+        .stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px; }
+        .stat-card { padding: 15px; border-radius: 6px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid #e9ecef; }
+        .stat-card-value { font-size: 28px; font-weight: bold; margin-bottom: 5px; }
+        .stat-card-label { font-size: 14px; color: #6c757d; }
+        .stat-card-value.critical { color: #c0392b; }
+        
+    </style>
+    <!-- 引入Font Awesome图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- 引入Chart.js用于图表展示 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- 左侧菜单栏 -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h1>H-System EDR平台</h1>
+        </div>
+        <div class="menu-list">
+            <a href="index.html" class="menu-item">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>安全态势</span>
+            </a>
+            <a href="alert-center.html" class="menu-item">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>告警中心</span>
+            </a>
+            <a href="investigation.html" class="menu-item active">
+                <i class="fas fa-search"></i>
+                <span>调查与响应</span>
+            </a>
+            <a href="asset-management.html" class="menu-item">
+                <i class="fas fa-desktop"></i>
+                <span>资产管理</span>
+            </a>
+            <a href="threat-hunting.html" class="menu-item">
+                <i class="fas fa-crosshairs"></i>
+                <span>威胁狩猎</span>
+            </a>
+            <a href="threat-intelligence.html" class="menu-item">
+                <i class="fas fa-shield-alt"></i>
+                <span>威胁情报</span>
+            </a>
+            <a href="report-center.html" class="menu-item">
+                <i class="fas fa-file-alt"></i>
+                <span>报告中心</span>
+            </a>
+            <a href="system-management.html" class="menu-item">
+                <i class="fas fa-cog"></i>
+                <span>系统管理</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 右侧主内容区 -->
+    <div class="main-container">
+        <div class="top-bar">
+            <div class="breadcrumbs">当前位置: 调查与响应 / <span id="breadcrumb">事件管理</span></div>
+            <div class="user-info">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='30' r='20' fill='%233498db'/%3E%3Cpath d='M10,90 C10,65 30,55 50,55 C70,55 90,65 90,90' fill='%233498db'/%3E%3C/svg%3E" alt="用户头像">
+                <span>安全分析师</span>
+            </div>
+        </div>
+
+        <div class="content-area">
+            <h2 class="page-title">调查与响应</h2>
+            
+            <div class="tab-nav">
+                <div class="tab-item active" id="tab-incident" onclick="showTab('incident')"><i class="fas fa-briefcase"></i> 事件管理</div>
+                <div class="tab-item" id="tab-investigation" onclick="showTab('investigation')"><i class="fas fa-sitemap"></i> 事件调查</div>
+                <div class="tab-item" id="tab-response" onclick="showTab('response')"><i class="fas fa-shield-alt"></i> 终端处置</div>
+            </div>
+
+            <!-- Tab Content: Incident Management (New) -->
+            <div class="tab-content active" id="content-incident">
+                <div class="stat-cards">
+                    <div class="stat-card"><div class="stat-card-value critical">8</div><div class="stat-card-label">待处理事件</div></div>
+                    <div class="stat-card"><div class="stat-card-value">15</div><div class="stat-card-label">处理中事件</div></div>
+                    <div class="stat-card"><div class="stat-card-value">3</div><div class="stat-card-label">分配给我的</div></div>
+                    <div class="stat-card"><div class="stat-card-value">2.5 小时</div><div class="stat-card-label">平均响应时间</div></div>
+                </div>
+                <div class="card">
+                    <h3>工单列表</h3>
+                    <table class="data-table" style="margin-top: 15px;">
+                        <thead><tr><th>事件ID</th><th>事件名称</th><th>严重性</th><th>状态</th><th>分配给</th><th>告警数</th><th>受影响资产</th><th>创建时间</th><th>操作</th></tr></thead>
+                        <tbody>
+                            <tr><td>CASE-2025-001</td><td>Emotet恶意软件爆发</td><td><span class="tag tag-critical">紧急</span></td><td><span class="tag tag-new">新建</span></td><td>未分配</td><td>12</td><td>5</td><td>2025-08-27 15:01</td><td class="table-actions"><button class="btn btn-outline btn-sm" onclick="showToast('已分配给当前用户')">分配给我</button><button class="btn btn-primary btn-sm" onclick="showTab('investigation')">调查</button></td></tr>
+                            <tr><td>CASE-2025-002</td><td>财务部主机可疑PowerShell活动</td><td><span class="tag tag-high">高危</span></td><td><span class="tag tag-inprogress">处理中</span></td><td>安全分析师</td><td>8</td><td>2</td><td>2025-08-27 14:10</td><td class="table-actions"><button class="btn btn-outline btn-sm" disabled>已分配</button><button class="btn btn-primary btn-sm" onclick="showTab('investigation')">调查</button></td></tr>
+                            <tr><td>CASE-2025-003</td><td>数据库服务器横向移动尝试</td><td><span class="tag tag-high">高危</span></td><td><span class="tag tag-closed">已关闭</span></td><td>安全主管</td><td>5</td><td>1</td><td>2025-08-26 18:30</td><td class="table-actions"><button class="btn btn-outline btn-sm" onclick="showToast('重新打开事件')">重开</button><button class="btn btn-outline btn-sm" onclick="showTab('response')">处置</button><button class="btn btn-primary btn-sm" onclick="showTab('investigation')">查看</button></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Tab Content: Investigation View (Original Content) -->
+            <div class="tab-content" id="content-investigation">
+                <div class="card investigation-sessions">
+                    <div class="session-header">
+                        <h3>调查会话</h3>
+                        <button class="new-session-btn" onclick="openNewSessionModal()"><i class="fas fa-plus"></i> 新建调查会话</button>
+                    </div>
+                    <div class="session-list">
+                        <div class="session-card active" onclick="loadSession(1)">
+                            <div class="session-title">Emotet恶意软件感染调查</div>
+                            <div class="session-meta">创建时间: 2025-08-27 14:45:22</div>
+                            <div class="session-meta">状态: 进行中</div>
+                            <div class="session-meta">关联资产: WIN-SERVER-01</div>
+                        </div>
+                        <div class="session-card" onclick="loadSession(2)">
+                            <div class="session-title">可疑PowerShell活动分析</div>
+                            <div class="session-meta">创建时间: 2025-08-27 13:50:15</div>
+                            <div class="session-meta">状态: 进行中</div>
+                            <div class="session-meta">关联资产: DESKTOP-8F3K29A</div>
+                        </div>
+                        <div class="session-card" onclick="loadSession(3)">
+                            <div class="session-title">横向移动尝试调查</div>
+                            <div class="session-meta">创建时间: 2025-08-27 11:30:08</div>
+                            <div class="session-meta">状态: 已暂停</div>
+                            <div class="session-meta">关联资产: SRV-DB-02</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 搜索和筛选区域 -->
+                <div class="card">
+                    <div class="search-bar">
+                        <input type="text" class="search-input" placeholder="搜索指标、IOC、资产或事件..." id="investigation-search">
+                        <button class="btn btn-primary" onclick="performSearch()"><i class="fas fa-search"></i> 搜索</button>
+                        <button class="btn btn-outline" onclick="openAdvancedSearch()"><i class="fas fa-sliders-h"></i> 高级</button>
+                    </div>
+
+                    <div class="search-filters">
+                        <div class="filter-tag">
+                            时间范围: 过去24小时 <span class="filter-tag-remove" onclick="removeFilter(this)"><i class="fas fa-times"></i></span>
+                        </div>
+                        <div class="filter-tag">
+                            资产: WIN-SERVER-01 <span class="filter-tag-remove" onclick="removeFilter(this)"><i class="fas fa-times"></i></span>
+                        </div>
+                        <div class="filter-tag">
+                            事件类型: 进程创建 <span class="filter-tag-remove" onclick="removeFilter(this)"><i class="fas fa-times"></i></span>
+                        </div>
+                        <div class="filter-tag">
+                            严重级别: 紧急,高危 <span class="filter-tag-remove" onclick="removeFilter(this)"><i class="fas fa-times"></i></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 关联实体图 -->
+                <div class="card">
+                    <div class="panel-header">
+                        <div class="panel-title">攻击路径与关联实体</div>
+                        <div>
+                            <button class="btn btn-outline" onclick="refreshGraph()"><i class="fas fa-sync-alt"></i> 刷新</button>
+                            <button class="btn btn-outline" onclick="expandGraph()"><i class="fas fa-expand"></i> 展开</button>
+                        </div>
+                    </div>
+                    <div class="entity-graph">
+                        <div class="graph-placeholder">
+                            <i class="fas fa-project-diagram"></i>
+                            <div>攻击路径可视化将在此显示</div>
+                            <div style="margin-top: 5px; font-size: 12px;">显示受影响实体及其关系</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 调查工作区 -->
+                <div class="investigation-workspace">
+                    <!-- 时间线面板 -->
+                    <div class="card timeline-panel">
+                        <div class="panel-header">
+                            <div class="panel-title">事件时间线</div>
+                            <div>
+                                <button class="btn btn-outline" onclick="filterTimeline()"><i class="fas fa-filter"></i> 筛选</button>
+                                <button class="btn btn-outline" onclick="exportTimeline()"><i class="fas fa-download"></i> 导出</button>
+                            </div>
+                        </div>
+                        <div class="panel-content">
+                            <div class="timeline">
+                                <div class="timeline-item critical" onclick="showTimelineItemDetails(1)">
+                                    <div class="timeline-time">2025-08-27 14:32:15</div>
+                                    <div class="timeline-content">
+                                        <div class="timeline-title">
+                                            <span>检测到Emotet恶意软件活动</span>
+                                            <span class="tag tag-critical">紧急</span>
+                                        </div>
+                                        <div class="timeline-description">
+                                            EDR客户端在WIN-SERVER-01上检测到与Emotet恶意软件匹配的行为特征，包括可疑进程注入和C2通信尝试。
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="timeline-item high" onclick="showTimelineItemDetails(2)">
+                                    <div class="timeline-time">2025-08-27 14:28:43</div>
+                                    <div class="timeline-content">
+                                        <div class="timeline-title">
+                                            <span>与已知恶意IP的通信尝试</span>
+                                            <span class="tag tag-high">高危</span>
+                                        </div>
+                                        <div class="timeline-description">
+                                            检测到从WIN-SERVER-01(192.168.1.101)到185.234.76.123的异常网络连接，该IP在威胁情报库中标记为Emotet C2服务器。
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="timeline-item high" onclick="showTimelineItemDetails(3)">
+                                    <div class="timeline-time">2025-08-27 14:25:03</div>
+                                    <div class="timeline-content">
+                                        <div class="timeline-title">
+                                            <span>可疑进程创建</span>
+                                            <span class="tag tag-high">高危</span>
+                                        </div>
+                                        <div class="timeline-description">
+                                            在临时目录中创建并执行了名为svchost.exe的进程，父进程为explorer.exe，命令行为"C:\Windows\Temp\svchost.exe -silent -install"。
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="timeline-item medium" onclick="showTimelineItemDetails(4)">
+                                    <div class="timeline-time">2025-08-27 14:20:18</div>
+                                    <div class="timeline-content">
+                                        <div class="timeline-title">
+                                            <span>注册表异常修改</span>
+                                            <span class="tag tag-medium">中危</span>
+                                        </div>
+                                        <div class="timeline-description">
+                                            检测到对HKCU\Software\Microsoft\Windows\CurrentVersion\Run键值的修改，添加了指向C:\Windows\Temp\svchost.exe的持久化项。
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="timeline-item medium" onclick="showTimelineItemDetails(5)">
+                                    <div class="timeline-time">2025-08-27 14:15:32</div>
+                                    <div class="timeline-content">
+                                        <div class="timeline-title">
+                                            <span>可疑文件写入</span>
+                                            <span class="tag tag-medium">中危</span>
+                                        </div>
+                                        <div class="timeline-description">
+                                            explorer.exe进程向C:\Windows\Temp目录写入了一个名为svchost.exe的文件，大小为245,760字节，哈希值为a7f3d9c2e4b8a1f3e5d7c9b0a2f4e6d8c0b1a3f5e7d9c8b0a1f2e3d4c5b6a7。
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="timeline-item" onclick="showTimelineItemDetails(6)">
+                                    <div class="timeline-time">2025-08-27 14:10:05</div>
+                                    <div class="timeline-content">
+                                        <div class="timeline-title">
+                                            <span>Office文档打开</span>
+                                        </div>
+                                        <div class="timeline-description">
+                                            用户admin打开了位于Downloads目录的文档"发票明细_8月27日.docm"，该文件通过电子邮件接收。
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="timeline-item" onclick="showTimelineItemDetails(7)">
+                                    <div class="timeline-time">2025-08-27 14:05:47</div>
+                                    <div class="timeline-content">
+                                        <div class="timeline-title">
+                                            <span>电子邮件接收</span>
+                                        </div>
+                                        <div class="timeline-description">
+                                            用户admin接收了一封来自"财务部门"&lt;finance@example.com&gt;的电子邮件，包含附件"发票明细_8月27日.docm"。
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- 详情与响应面板 -->
+                    <div class="card details-panel">
+                        <div class="panel-header">
+                            <div class="panel-title">事件详情与响应</div>
+                            <button class="btn btn-outline" onclick="clearDetails()"><i class="fas fa-times"></i> 清空</button>
+                        </div>
+                        <div class="panel-content" id="event-details-content">
+                            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #666;">
+                                <i class="fas fa-info-circle" style="font-size: 48px; margin-bottom: 15px; color: #adb5bd;"></i>
+                                <p>选择时间线中的事件查看详情</p>
+                                <p style="margin-top: 5px; font-size: 13px;">或使用响应行动面板执行安全操作</p>
+                            </div>
+                        </div>
+
+                        <div class="response-actions">
+                            <div class="entity-section-title"><i class="fas fa-shield-alt"></i> 响应行动</div>
+                            
+                            <button class="action-button" onclick="isolateAsset()">
+                                <i class="fas fa-lock" style="color: #3498db;"></i>
+                                <span>隔离资产 WIN-SERVER-01</span>
+                            </button>
+                            
+                            <button class="action-button" onclick="quarantineFile()">
+                                <i class="fas fa-ban" style="color: #e67e22;"></i>
+                                <span>隔离文件 C:\Windows\Temp\svchost.exe</span>
+                            </button>
+                            
+                            <button class="action-button" onclick="blockIp()">
+                                <i class="fas fa-wifi" style="color: #e74c3c;"></i>
+                                <span>阻断IP 185.234.76.123</span>
+                            </button>
+                            
+                            <button class="action-button" onclick="collectForensics()">
+                                <i class="fas fa-database" style="color: #27ae60;"></i>
+                                <span>收集取证数据</span>
+                            </button>
+                            
+                            <button class="action-button danger" onclick="killProcess()">
+                                <i class="fas fa-power-off" style="color: #e74c3c;"></i>
+                                <span>终止进程 svchost.exe (PID: 1248)</span>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        
+            <!-- Tab Content: Response Actions -->
+            <div class="tab-content" id="content-response">
+                <div class="card">
+                    <div class="form-group">
+                        <label for="target-host">选择目标主机进行响应</label>
+                        <select id="target-host" class="form-control">
+                            <option>WIN-SERVER-01 (192.168.1.101)</option>
+                            <option>DESKTOP-8F3K29A (192.168.2.56)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="response-panel">
+                    <div class="card action-card">
+                        <h3><i class="fas fa-network-wired"></i> 网络遏制</h3>
+                        <div class="action-card-body">
+                            <div class="host-status">
+                                <div class="status-indicator status-normal"></div>
+                                <div>当前状态: 正常</div>
+                            </div>
+                            <button class="btn btn-danger" style="width: 100%;" onclick="showToast('主机 WIN-SERVER-01 已被隔离')"><i class="fas fa-lock"></i> 隔离主机</button>
+                        </div>
+                    </div>
+                    <div class="card action-card">
+                        <h3><i class="fas fa-code"></i> 远程命令行</h3>
+                        <div class="action-card-body">
+                            <button class="btn btn-primary" style="width: 100%;" onclick="showRemoteShell()"><i class="fas fa-terminal"></i> 启动远程会话</button>
+                        </div>
+                    </div>
+                    <div class="card action-card">
+                         <h3><i class="fas fa-file-medical"></i> 样本与取证</h3>
+                         <div class="action-card-body">
+                            <div class="form-group">
+                                <label>文件路径</label>
+                                <input type="text" class="form-control" placeholder="例如: C:\Windows\Temp\svchost.exe">
+                            </div>
+                            <button class="btn btn-outline" style="width: 100%;" onclick="showToast('文件样本已获取')"><i class="fas fa-download"></i> 获取文件样本</button>
+                            <hr style="margin: 15px 0;">
+                            <button class="btn btn-outline" style="width: 100%;" onclick="showToast('内存镜像获取任务已启动')"><i class="fas fa-memory"></i> 获取内存镜像</button>
+                         </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3><i class="fas fa-terminal"></i> 远程会话: WIN-SERVER-01</h3>
+                    <div class="remote-shell" id="remote-shell-content" style="margin-top: 15px;">
+                        <div class="shell-output">H-System Remote Shell [Version 1.0.0]</div>
+                        <div class="shell-output">Connecting to WIN-SERVER-01... Connection established.</div>
+                        <div><span class="shell-prompt">C:\Windows\system32></span><span class="shell-cursor"></span></div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>        
+    </div>
+
+    <!-- 新建调查会话弹窗 -->
+    <div class="modal" id="newSessionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>新建调查会话</h3>
+                <button class="modal-close" onclick="closeNewSessionModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="session-name">会话名称</label>
+                    <input type="text" id="session-name" class="form-control" placeholder="例如：可疑活动调查">
+                </div>
+                <div class="form-group">
+                    <label for="session-description">描述</label>
+                    <textarea id="session-description" class="form-control" placeholder="简要描述调查目的和范围..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="session-asset">关联资产</label>
+                    <select id="session-asset" class="form-control">
+                        <option value="">选择资产</option>
+                        <option value="WIN-SERVER-01">WIN-SERVER-01 (192.168.1.101)</option>
+                        <option value="DESKTOP-8F3K29A">DESKTOP-8F3K29A (192.168.2.56)</option>
+                        <option value="SRV-DB-02">SRV-DB-02 (192.168.1.205)</option>
+                        <option value="DESKTOP-USER05">DESKTOP-USER05 (192.168.2.89)</option>
+                        <option value="LAPTOP-SALES03">LAPTOP-SALES03 (192.168.2.110)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="session-alert">关联告警（可选）</label>
+                    <select id="session-alert" class="form-control">
+                        <option value="">无</option>
+                        <option value="1">检测到Emotet恶意软件活动 (ALERT-20250827-001)</option>
+                        <option value="2">可疑PowerShell编码命令执行 (ALERT-20250827-002)</option>
+                        <option value="3">检测到横向移动尝试 (ALERT-20250827-003)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeNewSessionModal()">取消</button>
+                <button class="btn btn-primary" onclick="createNewSession()">创建会话</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 高级搜索弹窗 -->
+    <div class="modal" id="advancedSearchModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>高级搜索</h3>
+                <button class="modal-close" onclick="closeAdvancedSearchModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="search-query">搜索关键词</label>
+                    <input type="text" id="search-query" class="form-control" placeholder="进程名、IP地址、文件名、哈希值等">
+                </div>
+                <div class="form-group">
+                    <label>时间范围</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="datetime-local" id="time-start" class="form-control">
+                        <input type="datetime-local" id="time-end" class="form-control">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="event-type">事件类型</label>
+                    <select id="event-type" class="form-control" multiple size="5">
+                        <option value="process">进程创建</option>
+                        <option value="network">网络连接</option>
+                        <option value="file">文件操作</option>
+                        <option value="registry">注册表操作</option>
+                        <option value="login">登录事件</option>
+                        <option value="email">邮件活动</option>
+                        <option value="script">脚本执行</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="search-severity">严重级别</label>
+                    <select id="search-severity" class="form-control" multiple size="4">
+                        <option value="critical">紧急</option>
+                        <option value="high">高危</option>
+                        <option value="medium">中危</option>
+                        <option value="low">低危</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="search-asset">资产</label>
+                    <select id="search-asset" class="form-control">
+                        <option value="">所有资产</option>
+                        <option value="WIN-SERVER-01">WIN-SERVER-01 (192.168.1.101)</option>
+                        <option value="DESKTOP-8F3K29A">DESKTOP-8F3K29A (192.168.2.56)</option>
+                        <option value="SRV-DB-02">SRV-DB-02 (192.168.1.205)</option>
+                        <option value="DESKTOP-USER05">DESKTOP-USER05 (192.168.2.89)</option>
+                        <option value="LAPTOP-SALES03">LAPTOP-SALES03 (192.168.2.110)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeAdvancedSearchModal()">取消</button>
+                <button class="btn btn-primary" onclick="executeAdvancedSearch()">执行搜索</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Tab Switching Logic ---
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-item, .tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            document.getElementById(`content-${tabName}`).classList.add('active');
+            document.getElementById('breadcrumb').innerText = document.getElementById(`tab-${tabName}`).innerText.trim();
+        }
+        
+        // 当前选中的调查会话ID
+        let currentSessionId = 1;
+        // 当前选中的时间线事件ID
+        let currentEventId = null;
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 绑定菜单点击事件
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    // 移除所有菜单的active类
+                    menuItems.forEach(menu => menu.classList.remove('active'));
+                    // 给当前点击的菜单添加active类
+                    this.classList.add('active');
+                    
+                    // 更新面包屑
+                    document.getElementById('breadcrumb').textContent = this.querySelector('span').textContent;
+                });
+            });
+        });
+
+        // 加载调查会话
+        function loadSession(sessionId) {
+            currentSessionId = sessionId;
+            
+            // 更新会话卡片选中状态
+            const sessionCards = document.querySelectorAll('.session-card');
+            sessionCards.forEach(card => {
+                card.classList.remove('active');
+            });
+            sessionCards[sessionId - 1].classList.add('active');
+            
+            showToast(`已加载调查会话 #${sessionId}`);
+            // 在实际应用中，这里会加载该会话的详细数据
+        }
+
+        // 打开新建调查会话弹窗
+        function openNewSessionModal() {
+            document.getElementById('newSessionModal').classList.add('active');
+        }
+
+        // 关闭新建调查会话弹窗
+        function closeNewSessionModal() {
+            document.getElementById('newSessionModal').classList.remove('active');
+        }
+
+        // 创建新调查会话
+        function createNewSession() {
+            const name = document.getElementById('session-name').value;
+            const asset = document.getElementById('session-asset').value;
+            
+            if (!name || !asset) {
+                showToast('请填写会话名称并选择关联资产');
+                return;
+            }
+            
+            showToast(`已创建新调查会话: ${name}`);
+            closeNewSessionModal();
+            
+            // 清空表单
+            document.getElementById('session-name').value = '';
+            document.getElementById('session-description').value = '';
+            document.getElementById('session-asset').value = '';
+            document.getElementById('session-alert').value = '';
+            
+            // 在实际应用中，这里会添加新会话到列表并加载它
+        }
+
+        // 打开高级搜索弹窗
+        function openAdvancedSearch() {
+            document.getElementById('advancedSearchModal').classList.add('active');
+        }
+
+        // 关闭高级搜索弹窗
+        function closeAdvancedSearchModal() {
+            document.getElementById('advancedSearchModal').classList.remove('active');
+        }
+
+        // 执行高级搜索
+        function executeAdvancedSearch() {
+            showToast('高级搜索已执行');
+            closeAdvancedSearchModal();
+            // 在实际应用中，这里会执行搜索并更新时间线
+        }
+
+        // 执行简单搜索
+        function performSearch() {
+            const query = document.getElementById('investigation-search').value;
+            if (!query) {
+                showToast('请输入搜索关键词');
+                return;
+            }
+            
+            showToast(`搜索: ${query}`);
+            // 在实际应用中，这里会执行搜索并更新时间线
+        }
+
+        // 移除筛选条件
+        function removeFilter(element) {
+            element.parentElement.remove();
+            showToast('筛选条件已更新');
+        }
+
+        // 显示时间线事件详情
+        function showTimelineItemDetails(eventId) {
+            currentEventId = eventId;
+            const detailsContent = document.getElementById('event-details-content');
+            
+            // 根据事件ID加载不同的详情
+            let detailsHtml = '';
+            
+            // 事件详情数据
+            const events = {
+                1: {
+                    title: "检测到Emotet恶意软件活动",
+                    time: "2025-08-27 14:32:15",
+                    severity: "critical",
+                    severityText: "紧急",
+                    source: "WIN-SERVER-01 (192.168.1.101)",
+                    description: "EDR客户端通过行为分析和特征匹配检测到Emotet恶意软件活动。该恶意软件家族以信息窃取和作为其他恶意软件的分发平台而闻名。",
+                    detectionMethod: "行为分析 + 特征匹配",
+                    confidence: "99%",
+                    relatedIocs: [
+                        {type: "IP地址", value: "185.234.76.123"},
+                        {type: "文件哈希 (SHA256)", value: "a7f3d9c2e4b8a1f3e5d7c9b0a2f4e6d8c0b1a3f5e7d9c8b0a1f2e3d4c5b6a7"},
+                        {type: "进程", value: "svchost.exe (C:\\Windows\\Temp\\)"}
+                    ]
+                },
+                2: {
+                    title: "与已知恶意IP的通信尝试",
+                    time: "2025-08-27 14:28:43",
+                    severity: "high",
+                    severityText: "高危",
+                    source: "WIN-SERVER-01 (192.168.1.101:54321)",
+                    destination: "185.234.76.123:80",
+                    description: "检测到与威胁情报库中标记为恶意的IP地址建立连接。该IP与Emotet僵尸网络的命令与控制服务器相关联。",
+                    protocol: "TCP",
+                    bytesSent: "1,248",
+                    bytesReceived: "8,752",
+                    relatedIocs: [
+                        {type: "IP地址", value: "185.234.76.123"},
+                        {type: "进程", value: "svchost.exe (PID: 1248)"}
+                    ]
+                },
+                3: {
+                    title: "可疑进程创建",
+                    time: "2025-08-27 14:25:03",
+                    severity: "high",
+                    severityText: "高危",
+                    processName: "svchost.exe",
+                    processPath: "C:\\Windows\\Temp\\svchost.exe",
+                    pid: "1248",
+                    parentProcess: "explorer.exe (PID: 860)",
+                    commandLine: "C:\\Windows\\Temp\\svchost.exe -silent -install",
+                    description: "在临时目录中创建并执行了与系统进程同名的可执行文件，这是恶意软件常用的伪装技术。",
+                    user: "NT AUTHORITY\\SYSTEM",
+                    relatedIocs: [
+                        {type: "文件路径", value: "C:\\Windows\\Temp\\svchost.exe"},
+                        {type: "文件哈希 (SHA256)", value: "a7f3d9c2e4b8a1f3e5d7c9b0a2f4e6d8c0b1a3f5e7d9c8b0a1f2e3d4c5b6a7"},
+                        {type: "进程ID", value: "1248"}
+                    ]
+                }
+                // 更多事件数据...
+            };
+            
+            // 如果事件ID存在于事件数据中，则使用对应数据，否则使用通用模板
+            const event = events[eventId] || {
+                title: "事件 #" + eventId,
+                time: "2025-08-27 14:XX:XX",
+                severity: "medium",
+                severityText: "中危",
+                source: "WIN-SERVER-01 (192.168.1.101)",
+                description: "系统检测到异常活动，可能与安全威胁相关。"
+            };
+            
+            // 构建详情HTML
+            detailsHtml = `
+                <div class="entity-header">
+                    <div class="entity-icon">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                    <div class="entity-info">
+                        <h3>${event.title}</h3>
+                        <div class="entity-meta">
+                            <span class="tag tag-${event.severity}">${event.severityText}</span> · ${event.time}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="entity-section">
+                    <div class="entity-section-title"><i class="fas fa-info-circle"></i> 基本信息</div>
+                    <ul class="attribute-list">
+                        <li class="attribute-item">
+                            <div class="attribute-name">发生时间</div>
+                            <div class="attribute-value">${event.time}</div>
+                        </li>
+                        <li class="attribute-item">
+                            <div class="attribute-name">来源</div>
+                            <div class="attribute-value">${event.source}</div>
+                        </li>
+                        ${event.destination ? `
+                        <li class="attribute-item">
+                            <div class="attribute-name">目标</div>
+                            <div class="attribute-value">${event.destination}</div>
+                        </li>
+                        ` : ''}
+                        <li class="attribute-item">
+                            <div class="attribute-name">严重级别</div>
+                            <div class="attribute-value"><span class="tag tag-${event.severity}">${event.severityText}</span></div>
+                        </li>
+                        ${event.detectionMethod ? `
+                        <li class="attribute-item">
+                            <div class="attribute-name">检测方法</div>
+                            <div class="attribute-value">${event.detectionMethod}</div>
+                        </li>
+                        ` : ''}
+                        ${event.confidence ? `
+                        <li class="attribute-item">
+                            <div class="attribute-name">置信度</div>
+                            <div class="attribute-value">${event.confidence}</div>
+                        </li>
+                        ` : ''}
+                    </ul>
+                </div>
+                
+                <div class="entity-section">
+                    <div class="entity-section-title"><i class="fas fa-file-alt"></i> 描述</div>
+                    <div style="padding: 0 5px; line-height: 1.6; font-size: 14px;">
+                        ${event.description}
+                    </div>
+                </div>
+                
+                ${event.relatedIocs ? `
+                <div class="entity-section">
+                    <div class="entity-section-title"><i class="fas fa-shield-alt"></i> 相关IOCs</div>
+                    <ul class="attribute-list">
+                        ${event.relatedIocs.map(ioc => `
+                        <li class="attribute-item">
+                            <div class="attribute-name">${ioc.type}</div>
+                            <div class="attribute-value">${ioc.value} <button class="btn btn-outline btn-sm" style="padding: 2px 6px; margin-left: 5px;" onclick="addToBlockList('${ioc.value}')"><i class="fas fa-plus"></i></button></div>
+                        </li>
+                        `).join('')}
+                    </ul>
+                </div>
+                ` : ''}
+                
+                <div class="entity-section">
+                    <div class="entity-section-title"><i class="fas fa-link"></i> 关联事件</div>
+                    <div style="padding: 0 5px;">
+                        <div style="font-size: 14px; margin-bottom: 8px;">此事件与以下事件相关联：</div>
+                        <ul style="padding-left: 20px; font-size: 13px; line-height: 1.5;">
+                            <li>可疑文件写入 (2025-08-27 14:15:32)</li>
+                            <li>注册表异常修改 (2025-08-27 14:20:18)</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 15px;">
+                    <button class="btn btn-primary" style="width: 100%;" onclick="addNoteToEvent(${eventId})"><i class="fas fa-sticky-note"></i> 添加调查笔记</button>
+                </div>
+            `;
+            
+            detailsContent.innerHTML = detailsHtml;
+        }
+
+        // 清空详情面板
+        function clearDetails() {
+            currentEventId = null;
+            const detailsContent = document.getElementById('event-details-content');
+            detailsContent.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #666;">
+                    <i class="fas fa-info-circle" style="font-size: 48px; margin-bottom: 15px; color: #adb5bd;"></i>
+                    <p>选择时间线中的事件查看详情</p>
+                    <p style="margin-top: 5px; font-size: 13px;">或使用响应行动面板执行安全操作</p>
+                </div>
+            `;
+        }
+
+        // 刷新实体关系图
+        function refreshGraph() {
+            showToast('正在刷新实体关系图...');
+            // 在实际应用中，这里会重新加载和渲染图表
+        }
+
+        // 展开实体关系图
+        function expandGraph() {
+            showToast('实体关系图已展开至全屏');
+            // 在实际应用中，这里会打开全屏图表视图
+        }
+
+        // 筛选时间线
+        function filterTimeline() {
+            showToast('时间线筛选器已打开');
+            // 在实际应用中，这里会打开时间线筛选面板
+        }
+
+        // 导出时间线
+        function exportTimeline() {
+            showToast('正在导出时间线数据...');
+            setTimeout(() => {
+                showToast('时间线数据已导出为PDF文件');
+            }, 1500);
+        }
+
+        // 响应行动 - 隔离资产
+        function isolateAsset() {
+            if (confirm('确定要隔离资产 WIN-SERVER-01 吗？这将限制该资产的所有网络连接。')) {
+                showToast('资产 WIN-SERVER-01 已成功隔离');
+            }
+        }
+
+        // 响应行动 - 隔离文件
+        function quarantineFile() {
+            showToast('文件 C:\\Windows\\Temp\\svchost.exe 已隔离');
+        }
+
+        // 响应行动 - 阻断IP
+        function blockIp() {
+            showToast('IP地址 185.234.76.123 已加入阻断列表');
+        }
+
+        // 响应行动 - 收集取证数据
+        function collectForensics() {
+            showToast('开始收集WIN-SERVER-01的取证数据...');
+            setTimeout(() => {
+                showToast('取证数据收集完成，已保存到证据库');
+            }, 2000);
+        }
+
+        // 响应行动 - 终止进程
+        function killProcess() {
+            if (confirm('确定要终止进程 svchost.exe (PID: 1248) 吗？这可能会影响系统功能。')) {
+                showToast('进程 svchost.exe (PID: 1248) 已成功终止');
+            }
+        }
+
+        // 添加到阻断列表
+        function addToBlockList(ioc) {
+            showToast(`已将 ${ioc} 添加到阻断列表`);
+        }
+
+        // 添加调查笔记
+        function addNoteToEvent(eventId) {
+            const note = prompt('请输入调查笔记:');
+            if (note) {
+                showToast('调查笔记已添加');
+            }
+        }
+
+        // 显示提示消息
+        function showToast(message) {
+            // 检查是否已有toast，如有则移除
+            const existingToast = document.querySelector('.toast');
+            if (existingToast) {
+                existingToast.remove();
+            }
+            
+            // 创建新toast
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            // 3秒后移除
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+        
+        // --- JavaScript for Response Actions Tab ---
+        function showRemoteShell() {
+            const shellContent = document.getElementById('remote-shell-content');
+            shellContent.innerHTML += `<div><span class="shell-prompt">C:\\Windows\\system32></span><span class="shell-output"> tasklist /svc</span></div>`;
+            setTimeout(() => {
+                shellContent.innerHTML += `
+<div class="shell-output">
+Image Name              PID Services
+========================= ======== ============================================
+svchost.exe                   1248 EmotetMalwareService  &lt;-- Suspicious
+...
+</div>
+<div><span class="shell-prompt">C:\\Windows\\system32></span><span class="shell-cursor"></span></div>`;
+                shellContent.scrollTop = shellContent.scrollHeight;
+                showToast('远程会话已启动');
+            }, 1000);
+        }
+
+    </script>
+</body>
+</html>
+    

@@ -1,0 +1,40 @@
+{
+  "H-System EDR": {
+    "安全态势": "/dashboard",
+    "告警中心": "/alerts",
+    "调查与响应": "/investigation",
+    "资产管理": "/assets",
+    "威胁狩猎": "/hunting",
+    "威胁情报": "/intelligence",
+    "报告中心": "/reports",
+    "系统管理": {
+      "path": "/system",
+      "children": {
+        "系统状态": "/system/status",
+        "系统设置": "/system/settings",
+        "蜜罐策略中心": {
+          "path": "/system/honeypot",
+          "children": {
+            "蜜罐探针管理": "/system/honeypot/sensors",
+            "蜜罐策略配置": "/system/honeypot/policies"
+          }
+        },
+        "用户与权限": {
+          "path": "/system/user-permission",
+          "children": {
+            "用户管理": "/system/user-permission/users",
+            "角色与权限": "/system/user-permission/roles"
+          }
+        },
+        "系统维护": {
+          "path": "/system/maintenance",
+          "children": {
+            "日志审计": "/system/maintenance/logs",
+            "更新管理": "/system/maintenance/updates",
+            "备份与恢复": "/system/maintenance/backup"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,1891 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>威胁情报 - H-System EDR平台</title>
+    <style>
+        /* 基础样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+
+        body {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #f5f7fa;
+        }
+
+        /* 左侧菜单栏 */
+        .sidebar {
+            width: 220px;
+            background-color: #2c3e50;
+            color: white;
+            height: 100%;
+            transition: all 0.3s;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #34495e;
+        }
+
+        .sidebar-header h1 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .menu-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            border-left: 3px solid transparent;
+            text-decoration: none;
+            color: white;
+        }
+
+        .menu-item:hover {
+            background-color: #34495e;
+        }
+
+        .menu-item.active {
+            background-color: #34495e;
+            border-left-color: #3498db;
+        }
+
+        .menu-item i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* 右侧主内容区 */
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .top-bar {
+            height: 60px;
+            background-color: white;
+            border-bottom: 1px solid #ecf0f1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .user-info img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            margin-right: 10px;
+            background-color: #ecf0f1;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: #f5f7fa;
+        }
+
+        /* 页面通用样式 */
+        .page-title {
+            font-size: 22px;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .panel-header {
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #ecf0f1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .panel-content {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        /* 情报概览样式 */
+        .intelligence-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .overview-card {
+            background-color: white;
+            border-radius: 6px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+
+        .overview-value {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .overview-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .overview-trend {
+            font-size: 12px;
+            margin-top: 8px;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .trend-up {
+            color: #e74c3c;
+        }
+
+        .trend-down {
+            color: #27ae60;
+        }
+
+        /* 情报搜索筛选区 */
+        .intelligence-filter {
+            margin-bottom: 25px;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #495057;
+            font-size: 14px;
+        }
+
+        .filter-control {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 8px 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        /* 情报列表样式 */
+        .intelligence-list {
+            margin-bottom: 25px;
+        }
+
+        .intelligence-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .intelligence-table th,
+        .intelligence-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #f1f3f5;
+        }
+
+        .intelligence-table th {
+            background-color: #f8fafc;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .intelligence-table tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .ioc-type {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .type-ip {
+            background-color: #e0f2fe;
+            color: #0284c7;
+        }
+
+        .type-domain {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .type-hash {
+            background-color: #f0fdfa;
+            color: #059669;
+        }
+
+        .type-url {
+            background-color: #fef3c7;
+            color: #d97706;
+        }
+
+        .confidence {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .confidence-bar {
+            height: 6px;
+            flex: 1;
+            background-color: #e2e8f0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+        }
+
+        .confidence-high {
+            background-color: #e74c3c;
+        }
+
+        .confidence-medium {
+            background-color: #f39c12;
+        }
+
+        .confidence-low {
+            background-color: #27ae60;
+        }
+
+        /* 威胁类型标签 */
+        .threat-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+
+        .tag-malware {
+            background-color: #fee2e2;
+            color: #dc2626;
+        }
+
+        .tag-ransomware {
+            background-color: #fef2f2;
+            color: #b91c1c;
+        }
+
+        .tag-phishing {
+            background-color: #feebe2;
+            color: #c2410c;
+        }
+
+        .tag-c2 {
+            background-color: #fef3c7;
+            color: #d97706;
+        }
+
+        .tag-exploit {
+            background-color: #e0e7ff;
+            color: #4338ca;
+        }
+
+        /* 最近更新的IOC */
+        .recent-iocs {
+            margin-bottom: 25px;
+        }
+
+        .ioc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .ioc-card {
+            border: 1px solid #ecf0f1;
+            border-radius: 6px;
+            padding: 15px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .ioc-card:hover {
+            border-color: #3498db;
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.15);
+        }
+
+        .ioc-value {
+            font-family: monospace;
+            font-size: 14px;
+            margin-bottom: 8px;
+            word-break: break-all;
+        }
+
+        .ioc-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        /* 按钮样式 */
+        .btn {
+            padding: 6px 12px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+
+        .btn-warning {
+            background-color: #f39c12;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background-color: #d35400;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid #3498db;
+            color: #3498db;
+        }
+
+        .btn-outline:hover {
+            background-color: #3498db;
+            color: white;
+        }
+
+        /* 分页样式 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 5px;
+        }
+
+        .page-btn {
+            padding: 5px 12px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            background-color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .page-btn:hover {
+            border-color: #3498db;
+            color: #3498db;
+        }
+
+        .page-btn.active {
+            background-color: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        /* 弹窗样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 6px;
+            width: 80%;
+            max-width: 900px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .modal-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #ecf0f1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-size: 18px;
+            color: #2c3e50;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid #ecf0f1;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* 情报详情样式 */
+        .intelligence-details {
+            line-height: 1.6;
+        }
+
+        .detail-section {
+            margin-bottom: 20px;
+        }
+
+        .detail-section h4 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+            font-size: 16px;
+        }
+
+        .detail-item {
+            margin-bottom: 10px;
+        }
+
+        .detail-label {
+            display: inline-block;
+            width: 120px;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .detail-value {
+            display: inline;
+        }
+
+        .detail-value.monospace {
+            font-family: monospace;
+            background-color: #f8fafc;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+
+        .related-iocs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .related-ioc-item {
+            background-color: #f8fafc;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: monospace;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .related-ioc-item:hover {
+            background-color: #e6f4ff;
+            color: #3498db;
+        }
+
+        /* 提示消息样式 */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            z-index: 9999;
+            animation: fadeIn 0.3s, fadeOut 0.3s 2.7s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        /* 图表容器 */
+        .chart-container {
+            height: 250px;
+            margin-bottom: 20px;
+        }
+    </style>
+    <!-- 引入Font Awesome图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- 引入Chart.js用于图表展示 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- 左侧菜单栏 -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h1>H-System EDR平台</h1>
+        </div>
+        <div class="menu-list">
+            <a href="index.html" class="menu-item">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>安全态势</span>
+            </a>
+            <a href="alert-center.html" class="menu-item">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>告警中心</span>
+            </a>
+            <a href="investigation.html" class="menu-item">
+                <i class="fas fa-search"></i>
+                <span>调查与响应</span>
+            </a>
+            <a href="asset-management.html" class="menu-item">
+                <i class="fas fa-desktop"></i>
+                <span>资产管理</span>
+            </a>
+            <a href="threat-hunting.html" class="menu-item">
+                <i class="fas fa-crosshairs"></i>
+                <span>威胁狩猎</span>
+            </a>
+            <a href="threat-intelligence.html" class="menu-item active">
+                <i class="fas fa-shield-alt"></i>
+                <span>威胁情报</span>
+            </a>
+            <a href="report-center.html" class="menu-item">
+                <i class="fas fa-file-alt"></i>
+                <span>报告中心</span>
+            </a>
+            <a href="system-management.html" class="menu-item">
+                <i class="fas fa-cog"></i>
+                <span>系统管理</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 右侧主内容区 -->
+    <div class="main-container">
+        <div class="top-bar">
+            <div class="breadcrumbs">当前位置: <span id="breadcrumb">威胁情报</span></div>
+            <div class="user-info">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='30' r='20' fill='%233498db'/%3E%3Cpath d='M10,90 C10,65 30,55 50,55 C70,55 90,65 90,90' fill='%233498db'/%3E%3C/svg%3E" alt="用户头像">
+                <span>安全分析师</span>
+            </div>
+        </div>
+
+        <div class="content-area">
+            <h2 class="page-title">威胁情报中心</h2>
+
+            <!-- 情报概览统计 -->
+            <div class="intelligence-overview">
+                <div class="overview-card">
+                    <div class="overview-value">15,782</div>
+                    <div class="overview-label">总IOC数量</div>
+                    <div class="overview-trend trend-up">
+                        <i class="fas fa-arrow-up"></i> 12% 较上周
+                    </div>
+                </div>
+                <div class="overview-card">
+                    <div class="overview-value">3,241</div>
+                    <div class="overview-label">活跃威胁指标</div>
+                    <div class="overview-trend trend-up">
+                        <i class="fas fa-arrow-up"></i> 8% 较上周
+                    </div>
+                </div>
+                <div class="overview-card">
+                    <div class="overview-value">147</div>
+                    <div class="overview-label">威胁家族</div>
+                    <div class="overview-trend trend-down">
+                        <i class="fas fa-arrow-down"></i> 2% 较上周
+                    </div>
+                </div>
+                <div class="overview-card">
+                    <div class="overview-value">26</div>
+                    <div class="overview-label">今日新增IOC</div>
+                    <div class="overview-trend trend-up">
+                        <i class="fas fa-arrow-up"></i> 4 较昨日
+                    </div>
+                </div>
+            </div>
+
+            <!-- 新增威胁情报可视化分析区域 -->
+            <div class="row" style="display: flex; gap: 20px; margin-bottom: 20px;">
+                <!-- 左侧两图表表平行排列 -->
+                <div class="col-md-6" style="flex: 1;">
+                    <!-- 威胁类型类型分布图表 -->
+                    <div class="card mb-4" style="height: 100%;">
+                        <div class="card-header">
+                            <h5 class="card-title">威胁类型分布</h5>
+                            <div class="card-header-actions">
+                                <select class="form-control form-control-sm" onchange="updateThreatTypeChart(this.value)">
+                                    <option value="week">近7天</option>
+                                    <option value="month" selected>近30天</option>
+                                    <option value="quarter">近90天</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="threatTypeChart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6" style="flex: 1;">
+                    <!-- 威胁来源地域分布 -->
+                    <div class="card" style="height: 100%;">
+                        <div class="card-header">
+                            <h5 class="card-title">威胁来源地域分布</h5>
+                            <div class="card-header-actions">
+                                <button class="btn btn-sm btn-outline-primary" onclick="refreshGeoChart()">
+                                    <i class="fas fa-sync-alt"></i> 刷新数据
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="geoChart" class="geo-chart-container" style="height: 250px; background-color: #f8f9fa; border-radius: 4px; overflow: hidden; position: relative;">
+                                <!-- 这里将由JavaScript渲染地理分布图 -->
+                                <div class="text-center" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="sr-only">加载中...</span>
+                                    </div>
+                                    <p class="mt-2">正在加载地域分布数据...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- 威胁情报趋势图表 -->
+            <div class="card">
+                <div class="panel-header">
+                    <div class="panel-title">威胁情报趋势</div>
+                    <select class="filter-control" style="width: auto;" onchange="updateTrendChart(this.value)">
+                        <option value="7">近7天</option>
+                        <option value="30">近30天</option>
+                        <option value="90">近90天</option>
+                    </select>
+                </div>
+                <div class="chart-container">
+                    <canvas id="intelligenceTrendChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 情报搜索筛选区 -->
+            <div class="card intelligence-filter">
+                <div class="panel-header">
+                    <div class="panel-title">威胁情报检索</div>
+                </div>
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="ioc-type">IOC类型</label>
+                        <select id="ioc-type" class="filter-control">
+                            <option value="all">全部类型</option>
+                            <option value="ip">IP地址</option>
+                            <option value="domain">域名</option>
+                            <option value="hash">文件哈希</option>
+                            <option value="url">URL</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="threat-type">威胁类型</label>
+                        <select id="threat-type" class="filter-control">
+                            <option value="all">全部类型</option>
+                            <option value="malware">恶意软件</option>
+                            <option value="ransomware">勒索软件</option>
+                            <option value="phishing">钓鱼攻击</option>
+                            <option value="c2">C2服务器</option>
+                            <option value="exploit">漏洞利用</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="confidence">可信度</label>
+                        <select id="confidence" class="filter-control">
+                            <option value="all">全部可信度</option>
+                            <option value="high">高 (70-100%)</option>
+                            <option value="medium">中 (40-69%)</option>
+                            <option value="low">低 (1-39%)</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="time-range">时间范围</label>
+                        <select id="time-range" class="filter-control">
+                            <option value="all">全部时间</option>
+                            <option value="today">今日</option>
+                            <option value="7days">近7天</option>
+                            <option value="30days">近30天</option>
+                            <option value="90days">近90天</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="search-bar">
+                    <input type="text" class="search-input" id="intelligence-search" placeholder="搜索IOC值、威胁名称或描述...">
+                    <button class="btn btn-primary" onclick="searchIntelligence()"><i class="fas fa-search"></i> 搜索</button>
+                    <button class="btn btn-outline" onclick="resetFilters()"><i class="fas fa-sync-alt"></i> 重置</button>
+                    <button class="btn btn-outline" onclick="importIntelligence()"><i class="fas fa-upload"></i> 导入</button>
+                </div>
+            </div>
+
+            <!-- 最近更新的IOC -->
+            <div class="card recent-iocs">
+                <div class="panel-header">
+                    <div class="panel-title">最近更新的威胁指标</div>
+                    <a href="#" style="color: #3498db; font-size: 14px;" onclick="showAllIocs()">查看全部</a>
+                </div>
+                <div class="ioc-grid">
+                    <div class="ioc-card" onclick="showIocDetails('ip-185.234.76.123')">
+                        <div class="ioc-type type-ip">IP地址</div>
+                        <div class="ioc-value">185.234.76.123</div>
+                        <div class="ioc-meta">
+                            <span>Emotet C2服务器</span>
+                            <span>2小时前更新</span>
+                        </div>
+                        <div>
+                            <span class="threat-tag tag-malware">恶意软件</span>
+                            <span class="threat-tag tag-c2">C2</span>
+                        </div>
+                        <div class="confidence">
+                            <span>可信度：95%</span>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill confidence-high" style="width: 95%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ioc-card" onclick="showIocDetails('hash-a7f3d9c2')">
+                        <div class="ioc-type type-hash">文件哈希</div>
+                        <div class="ioc-value">a7f3d9c2e4b8a1f3e5d7c9b0a2f4e6d8</div>
+                        <div class="ioc-meta">
+                            <span>AgentTesla窃取器</span>
+                            <span>5小时前更新</span>
+                        </div>
+                        <div>
+                            <span class="threat-tag tag-malware">恶意软件</span>
+                        </div>
+                        <div class="confidence">
+                            <span>可信度：92%</span>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill confidence-high" style="width: 92%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ioc-card" onclick="showIocDetails('domain-financial-update.com')">
+                        <div class="ioc-type type-domain">域名</div>
+                        <div class="ioc-value">financial-update.com</div>
+                        <div class="ioc-meta">
+                            <span>银行钓鱼网站</span>
+                            <span>昨天更新</span>
+                        </div>
+                        <div>
+                            <span class="threat-tag tag-phishing">钓鱼攻击</span>
+                        </div>
+                        <div class="confidence">
+                            <span>可信度：87%</span>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill confidence-high" style="width: 87%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ioc-card" onclick="showIocDetails('url-hxxp://updateserver.net')">
+                        <div class="ioc-type type-url">URL</div>
+                        <div class="ioc-value">hxxp://updateserver.net/update.exe</div>
+                        <div class="ioc-meta">
+                            <span>ZLoader下载地址</span>
+                            <span>2天前更新</span>
+                        </div>
+                        <div>
+                            <span class="threat-tag tag-malware">恶意软件</span>
+                        </div>
+                        <div class="confidence">
+                            <span>可信度：76%</span>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill confidence-high" style="width: 76%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 情报列表 -->
+            <div class="card intelligence-list">
+                <div class="panel-header">
+                    <div class="panel-title">威胁情报列表</div>
+                    <div>
+                        <select class="filter-control" style="width: auto; display: inline-block;" onchange="changeIntelligenceView(this.value)">
+                            <option value="table">表格视图</option>
+                            <option value="grouped">分组视图</option>
+                        </select>
+                    </div>
+                </div>
+                <table class="intelligence-table">
+                    <thead>
+                        <tr>
+                            <th>IOC值</th>
+                            <th>类型</th>
+                            <th>威胁名称</th>
+                            <th>威胁类型</th>
+                            <th>可信度</th>
+                            <th>首次发现</th>
+                            <th>最近更新</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr onclick="showIocDetails('ip-198.51.100.45')">
+                            <td class="monospace">198.51.100.45</td>
+                            <td><span class="ioc-type type-ip">IP地址</span></td>
+                            <td>TrickBot</td>
+                            <td><span class="threat-tag tag-malware">恶意软件</span><span class="threat-tag tag-c2">C2</span></td>
+                            <td>
+                                <div class="confidence">
+                                    <span>98%</span>
+                                    <div class="confidence-bar">
+                                        <div class="confidence-fill confidence-high" style="width: 98%;"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>2025-08-01</td>
+                            <td>2025-08-27</td>
+                            <td>
+                                <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); showIocDetails('ip-198.51.100.45')"><i class="fas fa-info-circle"></i></button>
+                                <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); huntWithIoc('198.51.100.45')"><i class="fas fa-crosshairs"></i></button>
+                            </td>
+                        </tr>
+                        <tr onclick="showIocDetails('hash-5f4dcc3b')">
+                            <td class="monospace">5f4dcc3b5aa765d61d8327deb882cf99</td>
+                            <td><span class="ioc-type type-hash">文件哈希</span></td>
+                            <td>WannaCry</td>
+                            <td><span class="threat-tag tag-ransomware">勒索软件</span></td>
+                            <td>
+                                <div class="confidence">
+                                    <span>100%</span>
+                                    <div class="confidence-bar">
+                                        <div class="confidence-fill confidence-high" style="width: 100%;"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>2025-05-12</td>
+                            <td>2025-08-26</td>
+                            <td>
+                                <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); showIocDetails('hash-5f4dcc3b')"><i class="fas fa-info-circle"></i></button>
+                                <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); huntWithIoc('5f4dcc3b5aa765d61d8327deb882cf99')"><i class="fas fa-crosshairs"></i></button>
+                            </td>
+                        </tr>
+                        <tr onclick="showIocDetails('domain-banklogin-verify.com')">
+                            <td class="monospace">banklogin-verify.com</td>
+                            <td><span class="ioc-type type-domain">域名</span></td>
+                            <td>银行钓鱼套件</td>
+                            <td><span class="threat-tag tag-phishing">钓鱼攻击</span></td>
+                            <td>
+                                <div class="confidence">
+                                    <span>85%</span>
+                                    <div class="confidence-bar">
+                                        <div class="confidence-fill confidence-high" style="width: 85%;"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>2025-08-20</td>
+                            <td>2025-08-25</td>
+                            <td>
+                                <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); showIocDetails('domain-banklogin-verify.com')"><i class="fas fa-info-circle"></i></button>
+                                <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); huntWithIoc('banklogin-verify.com')"><i class="fas fa-crosshairs"></i></button>
+                            </td>
+                        </tr>
+                        <tr onclick="showIocDetails('url-hxxps://software-update.net')">
+                            <td class="monospace">hxxps://software-update.net/downloads/flashupdate.exe</td>
+                            <td><span class="ioc-type type-url">URL</span></td>
+                            <td>Emotet</td>
+                            <td><span class="threat-tag tag-malware">恶意软件</span></td>
+                            <td>
+                                <div class="confidence">
+                                    <span>72%</span>
+                                    <div class="confidence-bar">
+                                        <div class="confidence-fill confidence-high" style="width: 72%;"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>2025-08-15</td>
+                            <td>2025-08-24</td>
+                            <td>
+                                <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); showIocDetails('url-hxxps://software-update.net')"><i class="fas fa-info-circle"></i></button>
+                                <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); huntWithIoc('hxxps://software-update.net/downloads/flashupdate.exe')"><i class="fas fa-crosshairs"></i></button>
+                            </td>
+                        </tr>
+                        <tr onclick="showIocDetails('ip-192.0.2.10')">
+                            <td class="monospace">192.0.2.10</td>
+                            <td><span class="ioc-type type-ip">IP地址</span></td>
+                            <td>Qakbot</td>
+                            <td><span class="threat-tag tag-malware">恶意软件</span><span class="threat-tag tag-c2">C2</span></td>
+                            <td>
+                                <div class="confidence">
+                                    <span>65%</span>
+                                    <div class="confidence-bar">
+                                        <div class="confidence-fill confidence-medium" style="width: 65%;"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>2025-08-10</td>
+                            <td>2025-08-23</td>
+                            <td>
+                                <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); showIocDetails('ip-192.0.2.10')"><i class="fas fa-info-circle"></i></button>
+                                <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); huntWithIoc('192.0.2.10')"><i class="fas fa-crosshairs"></i></button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="pagination">
+                    <button class="page-btn"><i class="fas fa-chevron-left"></i></button>
+                    <button class="page-btn active">1</button>
+                    <button class="page-btn">2</button>
+                    <button class="page-btn">3</button>
+                    <button class="page-btn">4</button>
+                    <button class="page-btn">5</button>
+                    <button class="page-btn"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- IOC详情弹窗 -->
+    <div class="modal" id="iocDetailsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>IOC详情</h3>
+                <button class="modal-close" onclick="closeIocDetailsModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="ioc-details-content">
+                <!-- IOC详情内容将通过JavaScript动态填充 -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeIocDetailsModal()">关闭</button>
+                <button class="btn btn-primary" id="hunt-with-ioc-btn" onclick="huntWithIocFromModal()"><i class="fas fa-crosshairs"></i> 基于此IOC进行狩猎</button>
+                <button class="btn btn-warning" onclick="blockIoc()"><i class="fas fa-ban"></i> 加入阻断列表</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 当前选中的IOC值
+        let currentIocValue = '';
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 绑定菜单点击事件
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    // 移除所有菜单的active类
+                    menuItems.forEach(menu => menu.classList.remove('active'));
+                    // 给当前点击的菜单添加active类
+                    this.classList.add('active');
+                    
+                    // 更新面包屑
+                    document.getElementById('breadcrumb').textContent = this.querySelector('span').textContent;
+                });
+            });
+
+            // 初始化威胁情报趋势图表
+            initIntelligenceTrendChart();
+        });
+
+        // 初始化威胁情报趋势图表
+        function initIntelligenceTrendChart() {
+            const ctx = document.getElementById('intelligenceTrendChart').getContext('2d');
+            const chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['8/21', '8/22', '8/23', '8/24', '8/25', '8/26', '8/27'],
+                    datasets: [
+                        {
+                            label: 'IP地址',
+                            data: [12, 15, 8, 20, 14, 18, 26],
+                            backgroundColor: 'rgba(2, 132, 199, 0.7)',
+                        },
+                        {
+                            label: '域名',
+                            data: [8, 10, 12, 7, 15, 11, 14],
+                            backgroundColor: 'rgba(30, 64, 175, 0.7)',
+                        },
+                        {
+                            label: '文件哈希',
+                            data: [5, 7, 9, 12, 8, 10, 6],
+                            backgroundColor: 'rgba(5, 150, 105, 0.7)',
+                        },
+                        {
+                            label: 'URL',
+                            data: [7, 5, 10, 8, 12, 9, 11],
+                            backgroundColor: 'rgba(217, 119, 6, 0.7)',
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: '每日新增IOC数量'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            },
+                            title: {
+                                display: true,
+                                text: '数量'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: '日期'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 更新趋势图表
+        function updateTrendChart(days) {
+            // 在实际应用中，这里会根据选择的天数更新图表数据
+            showToast(`已更新为近${days}天的威胁情报趋势`);
+        }
+
+        // 搜索威胁情报
+        function searchIntelligence() {
+            const searchTerm = document.getElementById('intelligence-search').value;
+            const iocType = document.getElementById('ioc-type').value;
+            const threatType = document.getElementById('threat-type').value;
+            
+            let searchParams = [];
+            if (searchTerm) searchParams.push(`关键词: ${searchTerm}`);
+            if (iocType !== 'all') searchParams.push(`IOC类型: ${document.getElementById('ioc-type').options[document.getElementById('ioc-type').selectedIndex].text}`);
+            if (threatType !== 'all') searchParams.push(`威胁类型: ${document.getElementById('threat-type').options[document.getElementById('threat-type').selectedIndex].text}`);
+            
+            if (searchParams.length > 0) {
+                showToast(`正在搜索: ${searchParams.join('，')}`);
+                // 模拟搜索执行
+                setTimeout(() => {
+                    showToast(`搜索完成，找到 ${Math.floor(Math.random() * 100) + 10} 条匹配结果`);
+                }, 800);
+            } else {
+                showToast('请输入搜索条件或选择筛选器');
+            }
+        }
+
+        // 重置筛选条件
+        function resetFilters() {
+            document.getElementById('ioc-type').value = 'all';
+            document.getElementById('threat-type').value = 'all';
+            document.getElementById('confidence').value = 'all';
+            document.getElementById('time-range').value = 'all';
+            document.getElementById('intelligence-search').value = '';
+            showToast('筛选条件已重置');
+        }
+
+        // 导入威胁情报
+        function importIntelligence() {
+            showToast('打开威胁情报导入向导');
+            // 在实际应用中，这里会打开文件上传对话框或导入向导
+        }
+
+        // 显示所有IOC
+        function showAllIocs() {
+            // 在实际应用中，这里会跳转到完整的IOC列表页面
+            showToast('显示所有威胁指标');
+        }
+
+        // 切换情报视图
+        function changeIntelligenceView(viewType) {
+            showToast(`已切换到${viewType === 'table' ? '表格' : '分组'}视图`);
+            // 在实际应用中，这里会切换不同的情报展示方式
+        }
+
+        // 显示IOC详情
+        function showIocDetails(iocId) {
+            // 根据IOC ID获取详情数据
+            const iocDetails = getIocDetailsById(iocId);
+            if (!iocDetails) return;
+            
+            // 保存当前IOC值
+            currentIocValue = iocDetails.value;
+            
+            const detailsContent = document.getElementById('ioc-details-content');
+            
+            // 构建详情HTML
+            let detailsHtml = `
+                <div class="detail-section">
+                    <h4>IOC基本信息</h4>
+                    <div class="detail-item">
+                        <span class="detail-label">IOC值：</span>
+                        <span class="detail-value monospace">${iocDetails.value}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">类型：</span>
+                        <span class="detail-value"><span class="ioc-type type-${iocDetails.type}">${iocDetails.typeText}</span></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">威胁名称：</span>
+                        <span class="detail-value">${iocDetails.threatName}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">威胁类型：</span>
+                        <span class="detail-value">
+                            ${iocDetails.threatTypes.map(type => `<span class="threat-tag tag-${type}">${getThreatTypeName(type)}</span>`).join('')}
+                        </span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">可信度：</span>
+                        <span class="detail-value">
+                            ${iocDetails.confidence}%
+                            <div class="confidence-bar" style="display: inline-block; width: 100px; margin-left: 10px;">
+                                <div class="confidence-fill ${iocDetails.confidence >= 70 ? 'confidence-high' : iocDetails.confidence >= 40 ? 'confidence-medium' : 'confidence-low'}" 
+                                     style="width: ${iocDetails.confidence}%;"></div>
+                            </div>
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="detail-section">
+                    <h4>时间信息</h4>
+                    <div class="detail-item">
+                        <span class="detail-label">首次发现：</span>
+                        <span class="detail-value">${iocDetails.firstSeen}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">最近活动：</span>
+                        <span class="detail-value">${iocDetails.lastActive}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">情报更新：</span>
+                        <span class="detail-value">${iocDetails.lastUpdated}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">预计失效：</span>
+                        <span class="detail-value">${iocDetails.expires}</span>
+                    </div>
+                </div>
+                
+                <div class="detail-section">
+                    <h4>描述信息</h4>
+                    <div class="detail-item">
+                        <span class="detail-label">威胁描述：</span>
+                        <span class="detail-value">${iocDetails.description}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">战术标签：</span>
+                        <span class="detail-value">${iocDetails.tactics.join(', ')}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">相关威胁集团：</span>
+                        <span class="detail-value">${iocDetails.actor}</span>
+                    </div>
+                </div>
+                
+                <div class="detail-section">
+                    <h4>相关IOC</h4>
+                    <div class="related-iocs">
+                        ${iocDetails.relatedIocs.map(ioc => `
+                            <div class="related-ioc-item" onclick="showRelatedIocDetails('${ioc.id}')">
+                                <span class="ioc-type type-${ioc.type}" style="margin-right: 5px;">${ioc.typeText}</span>
+                                ${ioc.value.length > 30 ? ioc.value.substring(0, 30) + '...' : ioc.value}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div class="detail-section">
+                    <h4>参考信息</h4>
+                    <div class="detail-item">
+                        <span class="detail-label">情报来源：</span>
+                        <span class="detail-value">${iocDetails.source}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">外部参考：</span>
+                        <span class="detail-value">
+                            ${iocDetails.references.map(ref => `<a href="${ref.url}" target="_blank">${ref.name}</a>`).join('，')}
+                        </span>
+                    </div>
+                </div>
+            `;
+            
+            detailsContent.innerHTML = detailsHtml;
+            document.getElementById('iocDetailsModal').classList.add('active');
+        }
+
+        // 获取威胁类型名称
+        function getThreatTypeName(type) {
+            const typeMap = {
+                'malware': '恶意软件',
+                'ransomware': '勒索软件',
+                'phishing': '钓鱼攻击',
+                'c2': 'C2服务器',
+                'exploit': '漏洞利用'
+            };
+            return typeMap[type] || type;
+        }
+
+        // 显示相关IOC详情
+        function showRelatedIocDetails(iocId) {
+            closeIocDetailsModal();
+            setTimeout(() => {
+                showIocDetails(iocId);
+            }, 300);
+        }
+
+        // 关闭IOC详情弹窗
+        function closeIocDetailsModal() {
+            document.getElementById('iocDetailsModal').classList.remove('active');
+        }
+
+        // 基于IOC进行威胁狩猎
+        function huntWithIoc(iocValue) {
+            // 在实际应用中，这里会跳转到威胁狩猎页面并自动填充该IOC的查询
+            showToast(`正在基于IOC ${iocValue.substring(0, 20)}${iocValue.length > 20 ? '...' : ''} 进行威胁狩猎`);
+            
+            // 模拟跳转延迟
+            setTimeout(() => {
+                window.location.href = 'threat-hunting.html?ioc=' + encodeURIComponent(iocValue);
+            }, 1000);
+        }
+
+        // 从弹窗中基于IOC进行威胁狩猎
+        function huntWithIocFromModal() {
+            if (currentIocValue) {
+                closeIocDetailsModal();
+                setTimeout(() => {
+                    huntWithIoc(currentIocValue);
+                }, 300);
+            }
+        }
+
+        // 将IOC加入阻断列表
+        function blockIoc() {
+            if (currentIocValue) {
+                showToast(`已将 ${currentIocValue.substring(0, 20)}${currentIocValue.length > 20 ? '...' : ''} 加入阻断列表`);
+                closeIocDetailsModal();
+            }
+        }
+
+        // 显示提示消息
+        function showToast(message) {
+            // 检查是否已有toast，如有则移除
+            const existingToast = document.querySelector('.toast');
+            if (existingToast) {
+                existingToast.remove();
+            }
+            
+            // 创建新toast
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            // 3秒后移除
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // 根据ID获取IOC详情数据（模拟数据）
+        function getIocDetailsById(iocId) {
+            // 模拟不同IOC的详情数据
+            const detailsMap = {
+                'ip-185.234.76.123': {
+                    id: 'ip-185.234.76.123',
+                    value: '185.234.76.123',
+                    type: 'ip',
+                    typeText: 'IP地址',
+                    threatName: 'Emotet',
+                    threatTypes: ['malware', 'c2'],
+                    confidence: 95,
+                    firstSeen: '2025-08-10',
+                    lastActive: '2025-08-27 14:30:22',
+                    lastUpdated: '2025-08-27 16:00:00',
+                    expires: '2025-09-27',
+                    description: '该IP地址被标识为Emotet恶意软件家族的命令与控制服务器，主要用于接收指令和窃取数据。Emotet是一种模块化银行木马，通常通过垃圾邮件传播，能够下载和安装其他恶意软件。',
+                    tactics: ['命令与控制', '数据渗出', '初始访问'],
+                    actor: '未知',
+                    source: '内部威胁情报、第三方情报供应商',
+                    references: [
+                        { name: 'MITRE ATT&CK - Emotet', url: 'https://attack.mitre.org/software/S0363/' },
+                        { name: 'Emotet分析报告', url: 'https://example.com/reports/emotet' }
+                    ],
+                    relatedIocs: [
+                        { id: 'domain-emotet-c2.com', value: 'emotet-c2.com', type: 'domain', typeText: '域名' },
+                        { id: 'hash-9a3b7c2d', value: '9a3b7c2d8e4f5a6b7c8d9e0f1a2b3c4d', type: 'hash', typeText: '文件哈希' },
+                        { id: 'url-hxxp://185.234.76.123/payload', value: 'hxxp://185.234.76.123/payload.bin', type: 'url', typeText: 'URL' }
+                    ]
+                },
+                'ip-198.51.100.45': {
+                    id: 'ip-198.51.100.45',
+                    value: '198.51.100.45',
+                    type: 'ip',
+                    typeText: 'IP地址',
+                    threatName: 'TrickBot',
+                    threatTypes: ['malware', 'c2'],
+                    confidence: 98,
+                    firstSeen: '2025-08-01',
+                    lastActive: '2025-08-27 09:15:33',
+                    lastUpdated: '2025-08-27 10:00:00',
+                    expires: '2025-09-30',
+                    description: '该IP是TrickBot僵尸网络的活跃C2服务器，TrickBot主要用于窃取银行凭证和个人信息，并可作为其他恶意软件（如Ryuk勒索软件）的分发平台。',
+                    tactics: ['命令与控制', '凭证访问', '持久化'],
+                    actor: 'Wizard Spider',
+                    source: '多个情报源确认',
+                    references: [
+                        { name: 'TrickBot技术分析', url: 'https://example.com/reports/trickbot' },
+                        { name: 'TrickBot IOC列表', url: 'https://example.com/iocs/trickbot' }
+                    ],
+                    relatedIocs: [
+                        { id: 'domain-trickbot-c2.net', value: 'trickbot-c2.net', type: 'domain', typeText: '域名' },
+                        { id: 'hash-5f4dcc3b', value: '5f4dcc3b5aa765d61d8327deb882cf99', type: 'hash', typeText: '文件哈希' }
+                    ]
+                },
+                // 可以添加更多IOC详情数据...
+            };
+            
+            // 如果找不到对应ID的详情，返回一个默认的详情
+            return detailsMap[iocId] || detailsMap['ip-185.234.76.123'];
+        }
+
+        // 调整图表高度和尺寸相关设置
+        function initThreatTypeChart() {
+            const ctx = document.getElementById('threatTypeChart').getContext('2d');
+            
+            // 威胁类型数据
+            const threatTypes = [
+                '恶意软件', '钓鱼攻击', '勒索软件', 'DDoS攻击', 
+                '漏洞利用', '异常登录', '数据泄露', '其他威胁'
+            ];
+            
+            // 生成随机数据
+            const data = threatTypes.map(() => Math.floor(Math.random() * 100) + 10);
+            
+            // 颜色配置
+            const backgroundColors = [
+                'rgba(231, 76, 60, 0.7)', 'rgba(52, 152, 219, 0.7)',
+                'rgba(155, 89, 182, 0.7)', 'rgba(52, 73, 94, 0.7)',
+                'rgba(243, 156, 18, 0.7)', 'rgba(26, 188, 156, 0.7)',
+                'rgba(230, 126, 34, 0.7)', 'rgba(149, 165, 166, 0.7)'
+            ];
+            
+            window.threatTypeChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: threatTypes,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: backgroundColors,
+                        borderColor: backgroundColors.map(color => color.replace('0.7', '1')),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                boxWidth: 12,
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = Math.round((value / total) * 100);
+                                    return `${context.label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '60%' // 增加环形图的内半径，节省空间
+                }
+            });
+        }
+
+        function initThreatSeverityChart() {
+            const ctx = document.getElementById('threatSeverityChart').getContext('2d');
+            
+            // 威胁等级数据
+            const severities = ['低危', '中危', '高危', '严重'];
+            const data = severities.map(() => Math.floor(Math.random() * 80) + 20);
+            
+            // 颜色配置 - 从低到高的危险颜色
+            const backgroundColors = [
+                'rgba(46, 204, 113, 0.7)',  // 绿色 - 低危
+                'rgba(243, 156, 18, 0.7)',  // 黄色 - 中危
+                'rgba(230, 126, 34, 0.7)',  // 橙色 - 高危
+                'rgba(231, 76, 60, 0.7)'    // 红色 - 严重
+            ];
+            
+            window.threatSeverityChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: severities,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: backgroundColors,
+                        borderColor: backgroundColors.map(color => color.replace('0.7', '1')),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                boxWidth: 12,
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = Math.round((value / total) * 100);
+                                    return `${context.label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function initThreatTrendChart() {
+            const ctx = document.getElementById('threatTrendChart').getContext('2d');
+            
+            // 生成近30天的日期标签
+            const labels = [];
+            const now = new Date();
+            for (let i = 29; i >= 0; i--) {
+                const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+                labels.push(`${date.getMonth() + 1}/${date.getDate()}`);
+            }
+            
+            // 生成不同威胁类型的趋势数据
+            const datasets = [
+                {
+                    label: '恶意软件',
+                    data: generateRandomData(30, 5, 30),
+                    borderColor: 'rgba(231, 76, 60, 1)',
+                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                    tension: 0.3,
+                    fill: true,
+                    pointRadius: 2 // 减小数据点大小
+                },
+                {
+                    label: '钓鱼攻击',
+                    data: generateRandomData(30, 2, 15),
+                    borderColor: 'rgba(52, 152, 219, 1)',
+                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    tension: 0.3,
+                    fill: true,
+                    pointRadius: 2
+                },
+                {
+                    label: '漏洞利用',
+                    data: generateRandomData(30, 1, 10),
+                    borderColor: 'rgba(155, 89, 182, 1)',
+                    backgroundColor: 'rgba(155, 89, 182, 0.1)',
+                    tension: 0.3,
+                    fill: true,
+                    pointRadius: 2
+                },
+                {
+                    label: '异常行为',
+                    data: generateRandomData(30, 3, 20),
+                    borderColor: 'rgba(243, 156, 18, 1)',
+                    backgroundColor: 'rgba(243, 156, 18, 0.1)',
+                    tension: 0.3,
+                    fill: true,
+                    pointRadius: 2
+                }
+            ];
+            
+            window.threatTrendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                boxWidth: 12,
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '检测数量',
+                                font: {
+                                    size: 11
+                                }
+                            },
+                            ticks: {
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: '日期',
+                                font: {
+                                    size: 11
+                                }
+                            },
+                            ticks: {
+                                font: {
+                                    size: 10
+                                },
+                                maxRotation: 0, // 不旋转日期标签，节省空间
+                                autoSkip: true,
+                                maxTicksLimit: 10 // 限制x轴显示的刻度数量
+                            }
+                        }
+                    },
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
+                    }
+                }
+            });
+        }
+
+        // 优化地理分布图尺寸
+        function initGeoChart() {
+            // 模拟地理数据加载延迟
+            setTimeout(() => {
+                const geoContainer = document.getElementById('geoChart');
+                // 清空加载状态
+                geoContainer.innerHTML = '';
+                
+                // 创建SVG元素作为地理分布图
+                const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                svg.setAttribute('width', '100%');
+                svg.setAttribute('height', '100%');
+                svg.setAttribute('viewBox', '0 0 800 400'); // 调整 viewBox 使地图更紧凑
+                
+                // 添加一个简化的世界地图背景
+                const mapBackground = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                mapBackground.setAttribute('width', '100%');
+                mapBackground.setAttribute('height', '100%');
+                mapBackground.setAttribute('fill', '#e8eaed');
+                svg.appendChild(mapBackground);
+                
+                // 主要地区轮廓（更紧凑的布局）
+                const regions = [
+                    {id: 'na', x: 120, y: 100, width: 200, height: 150, fill: '#d2d6dc', name: '北美洲'},
+                    {id: 'sa', x: 160, y: 250, width: 160, height: 130, fill: '#d2d6dc', name: '南美洲'},
+                    {id: 'eu', x: 360, y: 90, width: 150, height: 90, fill: '#d2d6dc', name: '欧洲'},
+                    {id: 'af', x: 380, y: 180, width: 160, height: 160, fill: '#d2d6dc', name: '非洲'},
+                    {id: 'as', x: 520, y: 70, width: 200, height: 220, fill: '#d2d6dc', name: '亚洲'},
+                    {id: 'oc', x: 600, y: 290, width: 120, height: 80, fill: '#d2d6dc', name: '大洋洲'}
+                ];
+                
+                regions.forEach(region => {
+                    const regionElement = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                    regionElement.setAttribute('id', region.id);
+                    regionElement.setAttribute('x', region.x);
+                    regionElement.setAttribute('y', region.y);
+                    regionElement.setAttribute('width', region.width);
+                    regionElement.setAttribute('height', region.height);
+                    regionElement.setAttribute('fill', region.fill);
+                    regionElement.setAttribute('stroke', '#ffffff');
+                    regionElement.setAttribute('stroke-width', '2');
+                    regionElement.setAttribute('rx', '5');
+                    regionElement.setAttribute('ry', '5');
+                    svg.appendChild(regionElement);
+                    
+                    // 添加地区名称（使用更小的字体）
+                    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    text.setAttribute('x', parseInt(region.x) + parseInt(region.width) / 2);
+                    text.setAttribute('y', parseInt(region.y) + parseInt(region.height) / 2);
+                    text.setAttribute('text-anchor', 'middle');
+                    text.setAttribute('dominant-baseline', 'middle');
+                    text.setAttribute('fill', '#4a5568');
+                    text.setAttribute('font-size', '11');
+                    text.textContent = region.name;
+                    svg.appendChild(text);
+                });
+                
+                // 添加威胁热点标记（调整大小以适应紧凑布局）
+                const hotspots = [
+                    {region: 'as', x: 580, y: 150, value: 85, color: 'rgba(231, 76, 60, 0.8)'},
+                    {region: 'na', x: 200, y: 150, value: 65, color: 'rgba(231, 76, 60, 0.7)'},
+                    {region: 'eu', x: 420, y: 130, value: 50, color: 'rgba(231, 76, 60, 0.6)'},
+                    {region: 'sa', x: 220, y: 310, value: 30, color: 'rgba(231, 76, 60, 0.5)'},
+                    {region: 'af', x: 440, y: 260, value: 25, color: 'rgba(231, 76, 60, 0.4)'},
+                    {region: 'oc', x: 650, y: 320, value: 15, color: 'rgba(231, 76, 60, 0.3)'}
+                ];
+                
+                hotspots.forEach(hotspot => {
+                    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    const radius = 3 + (hotspot.value / 100) * 10; // 减小热点大小
+                    circle.setAttribute('cx', hotspot.x);
+                    circle.setAttribute('cy', hotspot.y);
+                    circle.setAttribute('r', radius);
+                    circle.setAttribute('fill', hotspot.color);
+                    circle.setAttribute('stroke', hotspot.color.replace(/0\.\d+/, '1'));
+                    circle.setAttribute('stroke-width', '1.5');
+                    circle.setAttribute('class', 'pulse');
+                    svg.appendChild(circle);
+                    
+                    // 添加数值标签（更小的字体）
+                    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    text.setAttribute('x', hotspot.x);
+                    text.setAttribute('y', hotspot.y);
+                    text.setAttribute('text-anchor', 'middle');
+                    text.setAttribute('dominant-baseline', 'middle');
+                    text.setAttribute('fill', '#ffffff');
+                    text.setAttribute('font-weight', 'bold');
+                    text.setAttribute('font-size', '9');
+                    text.textContent = hotspot.value;
+                    svg.appendChild(text);
+                });
+                
+                // 添加SVG到容器
+                geoContainer.appendChild(svg);
+                
+                // 添加脉冲动画样式
+                const style = document.createElement('style');
+                style.textContent = `
+                    .pulse {
+                        animation: pulse 2s infinite;
+                    }
+                    
+                    @keyframes pulse {
+                        0% {
+                            transform: scale(0.95);
+                            box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7);
+                        }
+                        
+                        70% {
+                            transform: scale(1);
+                            box-shadow: 0 0 0 8px rgba(231, 76, 60, 0);
+                        }
+                        
+                        100% {
+                            transform: scale(0.95);
+                            box-shadow: 0 0 0 0 rgba(231, 76, 60, 0);
+                        }
+                    }
+                `;
+                geoContainer.appendChild(style);
+            }, 1500);
+        }
+
+        // 更新图表数据的函数保持不变
+        function updateThreatTypeChart(range) {
+            showToast(`已更新为${range === 'week' ? '近7天' : range === 'month' ? '近30天' : '近90天'}的威胁类型分布数据`);
+            window.threatTypeChart.data.datasets[0].data = window.threatTypeChart.data.datasets[0].data.map(() => Math.floor(Math.random() * 100) + 10);
+            window.threatTypeChart.update();
+        }
+
+        function updateThreatSeverityChart(range) {
+            showToast(`已更新为${range === 'week' ? '近7天' : range === 'month' ? '近30天' : '近90天'}的威胁等级分布数据`);
+            window.threatSeverityChart.data.datasets[0].data = window.threatSeverityChart.data.datasets[0].data.map(() => Math.floor(Math.random() * 80) + 20);
+            window.threatSeverityChart.update();
+        }
+
+        function updateThreatTrendChart(range) {
+            let days = 30;
+            if (range === 'week') days = 7;
+            else if (range === 'quarter') days = 90;
+            
+            showToast(`已更新为${range === 'week' ? '近7天' : range === 'month' ? '近30天' : '近90天'}的威胁趋势数据`);
+            
+            // 更新日期标签
+            const labels = [];
+            const now = new Date();
+            for (let i = days - 1; i >= 0; i--) {
+                const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+                labels.push(`${date.getMonth() + 1}/${date.getDate()}`);
+            }
+            window.threatTrendChart.data.labels = labels;
+            
+            // 更新数据集
+            window.threatTrendChart.data.datasets.forEach(dataset => {
+                dataset.data = generateRandomData(days, 
+                    dataset.label === '恶意软件' ? 5 : 1, 
+                    dataset.label === '恶意软件' ? 30 : 20);
+            });
+            
+            window.threatTrendChart.update();
+        }
+
+        // 刷新地理分布图函数保持不变
+        function refreshGeoChart() {
+            showToast('正在刷新地域分布数据...');
+            const geoContainer = document.getElementById('geoChart');
+            // 显示加载状态
+            geoContainer.innerHTML = `
+                <div class="text-center" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">加载中...</span>
+                    </div>
+                    <p class="mt-2">正在刷新地域分布数据...</p>
+                </div>
+            `;
+            // 重新初始化图表
+            setTimeout(initGeoChart, 800);
+        }
+
+        // 页面初始化代码保持不变
+        document.addEventListener('DOMContentLoaded', function() {
+            // 原有的初始化代码...
+            
+            if (typeof Chart !== 'undefined') {
+                initThreatTypeChart();
+                initThreatSeverityChart();
+                initThreatTrendChart();
+            } else {
+                console.error('Chart.js库未加载，无法初始化图表');
+                showToast('图表功能依赖的库未加载，请检查配置', 'error');
+            }
+            
+            initGeoChart();
+        });
+
+    </script>
+</body>
+</html>
