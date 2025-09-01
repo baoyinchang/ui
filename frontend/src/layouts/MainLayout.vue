@@ -130,11 +130,15 @@ const appStore = useAppStore()
 const userStore = useUserStore()
 
 // 菜单路由
+//const menuRoutes = computed(() => {
+//  return router.getRoutes()
+//    .find(route => route.name === 'Layout')
+//    ?.children?.filter(route => !route.meta?.hideInMenu) || []
+//})
 const menuRoutes = computed(() => {
-  return router.getRoutes()
-    .find(route => route.name === 'Layout')
-    ?.children?.filter(route => !route.meta?.hideInMenu) || []
-})
+  const rootRoute = router.options.routes.find(r => r.path === '/');
+  return rootRoute ? rootRoute.children || [] : [];
+});
 
 // 面包屑导航
 const breadcrumbs = computed(() => {

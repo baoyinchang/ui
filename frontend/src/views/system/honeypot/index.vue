@@ -51,6 +51,11 @@
         </el-col>
       </el-row>
     </div>
+    
+    <div class="content-wrapper">
+      <router-view />
+    </div>
+
   </div>
 </template>
 
