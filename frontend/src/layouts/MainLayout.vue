@@ -110,6 +110,17 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import {
+  Expand,
+  Fold,
+  FullScreen,
+  Sunny,
+  Moon,
+  User,
+  ArrowDown,
+  Setting,
+  SwitchButton
+} from '@element-plus/icons-vue'
 import { useAppStore } from '@/store/app'
 import { useUserStore } from '@/store/user'
 import MenuTree from '@/components/layout/MenuTree.vue'
