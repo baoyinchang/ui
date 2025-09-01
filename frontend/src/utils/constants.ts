@@ -66,19 +66,22 @@ export const ALERT_SEVERITY_COLORS = {
 export const ALERT_STATUS = {
   UNHANDLED: 'unhandled',
   HANDLING: 'handling',
-  RESOLVED: 'resolved'
+  RESOLVED: 'resolved',
+  CLOSED: 'closed'
 } as const
 
 export const ALERT_STATUS_LABELS = {
   [ALERT_STATUS.UNHANDLED]: '未处理',
   [ALERT_STATUS.HANDLING]: '处理中',
-  [ALERT_STATUS.RESOLVED]: '已解决'
+  [ALERT_STATUS.RESOLVED]: '已解决',
+  [ALERT_STATUS.CLOSED]: '已关闭'
 }
 
 export const ALERT_STATUS_COLORS = {
   [ALERT_STATUS.UNHANDLED]: '#f56c6c',
   [ALERT_STATUS.HANDLING]: '#e6a23c',
-  [ALERT_STATUS.RESOLVED]: '#67c23a'
+  [ALERT_STATUS.RESOLVED]: '#67c23a',
+  [ALERT_STATUS.CLOSED]: '#909399'
 }
 
 // 资产类型
@@ -195,6 +198,21 @@ export const INVESTIGATION_STATUS_LABELS = {
   [INVESTIGATION_STATUS.ACTIVE]: '进行中',
   [INVESTIGATION_STATUS.COMPLETED]: '已完成',
   [INVESTIGATION_STATUS.ARCHIVED]: '已归档'
+}
+
+// 调查优先级
+export const INVESTIGATION_PRIORITY = {
+  CRITICAL: 'critical',
+  HIGH: 'high',
+  MEDIUM: 'medium',
+  LOW: 'low'
+} as const
+
+export const INVESTIGATION_PRIORITY_LABELS = {
+  [INVESTIGATION_PRIORITY.CRITICAL]: '紧急',
+  [INVESTIGATION_PRIORITY.HIGH]: '高',
+  [INVESTIGATION_PRIORITY.MEDIUM]: '中',
+  [INVESTIGATION_PRIORITY.LOW]: '低'
 }
 
 // 报告状态

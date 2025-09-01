@@ -45,7 +45,7 @@
           <el-card class="metric-card threats">
             <div class="metric-content">
               <div class="metric-icon">
-                <el-icon><Shield /></el-icon>
+                <el-icon><Lock /></el-icon>
               </div>
               <div class="metric-info">
                 <div class="metric-value">{{ metrics.activeThreats }}</div>
@@ -256,7 +256,7 @@ import { useRouter } from 'vue-router'
 import {
   Refresh,
   Warning,
-  Shield,
+  Lock,
   Monitor,
   TrendCharts,
   ArrowUp,

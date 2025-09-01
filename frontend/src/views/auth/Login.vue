@@ -83,7 +83,7 @@
         <div class="info-card">
           <h3>系统特性</h3>
           <ul class="feature-list">
-            <li><el-icon><Shield /></el-icon> 全方位安全防护</li>
+            <li><el-icon><Key /></el-icon> 全方位安全防护</li>
             <li><el-icon><Monitor /></el-icon> 实时威胁监控</li>
             <li><el-icon><DataAnalysis /></el-icon> 智能分析引擎</li>
             <li><el-icon><Connection /></el-icon> 多维度关联分析</li>
@@ -113,7 +113,7 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElForm } from 'element-plus'
-import { User, Lock, Shield, Monitor, DataAnalysis, Connection } from '@element-plus/icons-vue'
+import { User, Lock, Key, Monitor, DataAnalysis, Connection } from '@element-plus/icons-vue'
 import { useUserStore } from '@/store/user'
 import type { FormInstance, FormRules } from 'element-plus'
 

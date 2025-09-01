@@ -47,5 +47,7 @@ class Settings(BaseSettings):
     class Config:
         case_sensitive = True
         env_file = ".env"
+        # 允许额外的字段，避免验证错误
+        extra = "allow"
 
 settings = Settings()

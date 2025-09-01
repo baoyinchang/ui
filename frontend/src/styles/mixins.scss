@@ -130,7 +130,11 @@
     100% { transform: rotate(360deg); }
   }
   
-  animation: spin 1s linear infinite;
+  // animation: spin 1s linear infinite;
+  // 用 & {} 包裹声明，适配新规范
+  & {
+    animation: spin 1s linear infinite;
+  }
 }
 
 // 渐入动画
@@ -140,7 +144,9 @@
     to { opacity: 1; }
   }
   
-  animation: fadeIn $duration ease-in-out;
+  & {
+    animation: fadeIn $duration ease-in-out;
+  }
 }
 
 // 滑入动画
@@ -155,6 +161,8 @@
       transform: translateY(0);
     }
   }
-  
-  animation: slideInUp $duration ease-out;
+
+  & {
+    animation: slideInUp $duration ease-out;
+  }
 }

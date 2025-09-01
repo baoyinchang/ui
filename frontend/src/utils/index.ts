@@ -34,6 +34,11 @@ export const formatRelativeTime = (time: string | Date) => {
   return target.format('YYYY-MM-DD')
 }
 
+// /src/utils/index.ts
+export const getRelativeTime = (date: Date): string => {
+  return formatRelativeTime(date)
+}
+
 /**
  * 格式化数字（添加千分位分隔符）
  */
