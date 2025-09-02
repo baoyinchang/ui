@@ -23,6 +23,7 @@
 
     <!-- Tab 导航 -->
     <el-tabs v-model="activeTab" type="card" class="asset-tabs" @tab-change="handleTabChange">
+      <!-- 资产清单标签页 -->
       <el-tab-pane name="inventory" label="资产清单">
         <template #label>
           <el-icon><List /></el-icon>
@@ -33,9 +34,11 @@
           :assetData="assetData"
           :assetDistribution="assetDistribution"
           :endpointStatus="endpointStatus"
+          @refresh-data="handleRefresh"
         />
       </el-tab-pane>
 
+      <!-- 漏洞与补丁标签页 -->
       <el-tab-pane name="vulnerability" label="漏洞与补丁">
         <template #label>
           <el-icon><Warning /></el-icon>
@@ -46,9 +49,11 @@
           :vulnerabilityData="vulnerabilityData"
           :vulnSeverityData="vulnSeverityData"
           :vulnTrendData="vulnTrendData"
+          @refresh-data="handleRefresh"
         />
       </el-tab-pane>
 
+      <!-- 基线合规标签页 -->
       <el-tab-pane name="compliance" label="基线合规">
         <template #label>
           <el-icon><Check /></el-icon>
@@ -59,6 +64,7 @@
           :complianceData="complianceData"
           :complianceByPolicy="complianceByPolicy"
           :complianceStatus="complianceStatus"
+          @refresh-data="handleRefresh"
         />
       </el-tab-pane>
     </el-tabs>
@@ -70,11 +76,11 @@ import { ref, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 // 引入图标
 import { Refresh, Plus, List, Warning, Check } from '@element-plus/icons-vue'
-// 引入子组件
+// 引入所有标签页组件
 import AssetInventory from './components/AssetInventory.vue'
 import VulnerabilityManagement from './components/VulnerabilityManagement.vue'
 import BaselineCompliance from './components/BaselineCompliance.vue'
-// 引入API（假设已实现）
+// 引入API
 import { assetApi } from '@/api/modules/asset'
 import { vulnerabilityApi } from '@/api/modules/vulnerability'
 import { complianceApi } from '@/api/modules/compliance'
@@ -83,7 +89,7 @@ import { complianceApi } from '@/api/modules/compliance'
 const activeTab = ref('inventory')
 const loading = ref(false)
 
-// 数据存储
+// 所有标签页数据存储
 const assetData = ref([])
 const assetDistribution = ref({})
 const endpointStatus = ref({})
@@ -104,11 +110,10 @@ const tabNameMap = {
 // 当前Tab名称
 const activeTabName = computed(() => tabNameMap[activeTab.value])
 
-// 刷新数据
+// 刷新数据 - 根据当前标签页加载对应数据
 const handleRefresh = async () => {
   loading.value = true
   try {
-    // 根据当前Tab加载对应数据
     if (activeTab.value === 'inventory') {
       await fetchAssetData()
     } else if (activeTab.value === 'vulnerability') {
@@ -129,6 +134,7 @@ const handleRefresh = async () => {
 const handleTabChange = async (tabName) => {
   loading.value = true
   try {
+    // 只在首次切换到该标签页时加载数据
     if (tabName === 'inventory' && assetData.value.length === 0) {
       await fetchAssetData()
     } else if (tabName === 'vulnerability' && vulnerabilityData.value.length === 0) {
@@ -137,7 +143,13 @@ const handleTabChange = async (tabName) => {
       await fetchComplianceData()
     }
   } catch (error) {
-    console.error(error)
+    console.error(`加载${tabName}数据失败:`, error);
+    // 即使加载失败也显示空页面结构
+    if (tabName === 'vulnerability' && vulnerabilityData.value.length === 0) {
+      vulnerabilityData.value = [];
+    } else if (tabName === 'compliance' && complianceData.value.length === 0) {
+      complianceData.value = [];
+    }
   } finally {
     loading.value = false
   }
@@ -145,7 +157,6 @@ const handleTabChange = async (tabName) => {
 
 // 添加资产
 const handleAddAsset = () => {
-  // 这里可以实现添加资产的逻辑（如打开弹窗）
   ElMessage.info('打开添加资产弹窗')
 }
 
@@ -207,9 +218,22 @@ onMounted(async () => {
   margin: 0;
 }
 
+.risk-text {
+  margin-left: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.el-progress {
+  width: 120px;
+  display: inline-block;
+}
+
 .page-actions {
   display: flex;
+  justify-content: flex-end;
   gap: 12px;
+  margin-bottom: 16px;
 }
 
 .breadcrumb {

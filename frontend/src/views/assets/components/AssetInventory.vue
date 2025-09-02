@@ -1,4 +1,20 @@
 <template>
+  <!-- 在 AssetInventory.vue 的 template 开头添加 -->
+  <div class="page-actions">
+    <el-button type="primary" :icon="Plus" @click="handleAddAsset">
+      添加资产
+    </el-button>
+    <el-button :icon="Upload" @click="showImportDialog = true">
+    批量导入
+    </el-button>
+    <el-button :icon="Refresh" @click="handleScanAssets">
+      资产扫描
+    </el-button>
+    <el-button :icon="Download" @click="handleExport">
+      导出资产
+    </el-button>
+  </div>
+
   <div class="asset-inventory">
     <!-- 统计卡片 -->
     <el-row :gutter="20" class="stat-row">
@@ -88,35 +104,64 @@
         stripe
         style="width: 100%"
       >
+        <el-table-column type="selection" width="55" />
+        <el-table-column type="index" label="序号" width="60" />
         <el-table-column prop="hostname" label="主机名" />
-        <el-table-column prop="ip" label="IP地址" />
+        <el-table-column prop="ip" label="IP地址">
+            <template #default="scope">
+            <el-tag type="info" size="small">{{ scope.row.ip }}</el-tag>
+            </template>
+        </el-table-column>
         <el-table-column prop="type" label="类型">
-          <template #default="scope">
-            <el-tag type="success" v-if="scope.row.type === 'server'">服务器</el-tag>
-            <el-tag type="info" v-else>工作站</el-tag>
-          </template>
+            <template #default="scope">
+            <StatusTag
+                :value="scope.row.type"
+                type="custom"
+                :custom-mapping="assetTypeMapping"
+            />
+            </template>
         </el-table-column>
         <el-table-column prop="status" label="状态">
-          <template #default="scope">
-            <el-tag type="danger" v-if="scope.row.status === 'threatened'">受威胁</el-tag>
-            <el-tag type="warning" v-else-if="scope.row.status === 'attention'">需关注</el-tag>
-            <el-tag type="success" v-else-if="scope.row.status === 'normal'">正常</el-tag>
-            <el-tag type="info" v-else>离线</el-tag>
-          </template>
+            <template #default="scope">
+            <StatusTag
+                :value="scope.row.status"
+                type="asset-status"
+                :show-dot="true"
+            />
+            </template>
         </el-table-column>
         <el-table-column prop="edrVersion" label="EDR版本" />
         <el-table-column prop="department" label="所属部门" />
         <el-table-column prop="owner" label="负责人" />
-        <el-table-column prop="lastOnline" label="最后在线时间" />
-        <el-table-column label="操作" width="100">
-          <template #default="scope">
-            <el-button 
-              type="text" 
-              @click="handleViewDetail(scope.row.id)"
+        <el-table-column prop="lastOnline" label="最后在线时间">
+            <template #default="scope">
+            <el-tooltip :content="formatTime(scope.row.lastOnline)" placement="top">
+                <span>{{ getRelativeTime(scope.row.lastOnline) }}</span>
+            </el-tooltip>
+            </template>
+        </el-table-column>
+        <el-table-column label="操作" width="200">
+            <template #default="scope">
+            <el-button
+                type="primary"
+                size="small"
+                :icon="View"
+                @click="handleViewDetail(scope.row)"
             >
-              详情
+                查看
             </el-button>
-          </template>
+            <el-dropdown @command="(command) => handleMoreAction(command, scope.row)">
+                <el-button size="small" :icon="More" />
+                <template #dropdown>
+                <el-dropdown-menu>
+                    <el-dropdown-item command="edit" :icon="Edit">编辑</el-dropdown-item>
+                    <el-dropdown-item command="scan" :icon="Search">扫描</el-dropdown-item>
+                    <el-dropdown-item command="history" :icon="Clock">历史记录</el-dropdown-item>
+                    <el-dropdown-item command="delete" :icon="Delete" divided>删除</el-dropdown-item>
+                </el-dropdown-menu>
+                </template>
+            </el-dropdown>
+            </template>
         </el-table-column>
       </el-table>
 
@@ -133,12 +178,79 @@
       />
     </el-card>
   </div>
+
+  <!-- 在 AssetInventory.vue 的 template 末尾添加 -->
+  <!-- 批量导入对话框 -->
+  <el-dialog
+    v-model="showImportDialog"
+    title="批量导入资产"
+    width="600px"
+    :close-on-click-modal="false"
+  >
+    <AssetImport
+      @success="handleImportSuccess"
+      @cancel="showImportDialog = false"
+    />
+  </el-dialog>
+
+  <!-- 资产扫描对话框 -->
+  <el-dialog
+    v-model="showScanDialog"
+    title="资产扫描"
+    width="800px"
+    :close-on-click-modal="false"
+  >
+    <AssetScan
+      @success="handleScanSuccess"
+      @cancel="showScanDialog = false"
+    />
+  </el-dialog>
+
+  <!-- 资产详情对话框 -->
+  <el-dialog
+    v-model="showDetailDialog"
+    title="资产详情"
+    width="80%"
+    :close-on-click-modal="false"
+  >
+    <AssetDetail
+      v-if="currentAsset"
+      :asset="currentAsset"
+      @update="handleAssetUpdate"
+      @close="showDetailDialog = false"
+    />
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import Chart from 'chart.js/auto'
+// 新增图标导入
+import {
+  Plus,
+  Upload,
+  Refresh,
+  Download,
+  Monitor,
+  CircleCheck,
+  Warning,
+  CircleClose,
+  View,
+  More,
+  Edit,
+  Search,
+  Clock,
+  Delete
+} from '@element-plus/icons-vue'
+// 新增组件导入
+import AssetDetail from '../components/AssetDetail.vue'
+import AssetImport from '../components/AssetImport.vue'
+import AssetScan from '../components/AssetScan.vue'
+import StatusTag from '@/components/common/StatusTag.vue'
+import { assetsApi } from '@/api'
+import { formatTime, getRelativeTime } from '@/utils'
+import type { Asset } from '@/types/api'
 
 // 接收父组件参数
 const props = defineProps({
@@ -152,11 +264,21 @@ const props = defineProps({
 let assetDistributionChart = null
 let endpointStatusChart = null
 
+// 新增状态管理
+const showImportDialog = ref(false)
+const showScanDialog = ref(false)
+const showDetailDialog = ref(false)
+const currentAsset = ref<Asset>()
+const selectedRows = ref<Asset[]>([])
+
 // 筛选表单
 const filterForm = ref({
   assetType: '',
   status: '',
-  keyword: ''
+  keyword: '',
+  ip_range: '',
+  location: '',
+  tags: []
 })
 
 // 分页配置
@@ -164,6 +286,117 @@ const pagination = ref({
   currentPage: 1,
   pageSize: 10
 })
+
+// 新增：处理添加资产
+const handleAddAsset = () => {
+  // 可以跳转到新增页面或打开弹窗
+  ElMessage.info('打开添加资产表单')
+}
+
+// 新增：处理资产扫描
+const handleScanAssets = () => {
+  showScanDialog.value = true
+}
+
+// 新增：处理扫描成功回调
+const handleScanSuccess = async (taskId: string) => {
+  showScanDialog.value = false
+  ElMessage.success('扫描任务已启动，正在扫描资产...')
+  
+  // 轮询监听扫描进度
+  const checkProgress = async () => {
+    try {
+      const progress = await assetsApi.getScanProgress(taskId)
+      if (progress.status === 'completed') {
+        ElMessage.success('资产扫描完成')
+        // 通知父组件刷新数据
+        emit('refresh-data')
+        return
+      }
+      // 未完成则继续轮询
+      setTimeout(checkProgress, 3000)
+    } catch (error) {
+      console.error('获取扫描进度失败:', error)
+      ElMessage.error('扫描过程出错')
+    }
+  }
+  
+  checkProgress()
+}
+
+// 新增：处理导入成功
+const handleImportSuccess = () => {
+  showImportDialog.value = false
+  ElMessage.success('资产导入成功')
+  emit('refresh-data') // 通知父组件刷新数据
+}
+
+// 新增：处理导出
+const handleExport = async () => {
+  try {
+    const params = {
+      ...filterForm.value,
+      format: 'xlsx'
+    }
+    const response = await assetsApi.exportAssets(params)
+    
+    // 处理文件下载
+    const blob = new Blob([response.data], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `资产列表_${new Date().getTime()}.xlsx`
+    a.click()
+    URL.revokeObjectURL(url)
+    
+    ElMessage.success('导出成功')
+  } catch (error) {
+    console.error('导出失败:', error)
+    ElMessage.error('导出失败，请重试')
+  }
+}
+
+// 新增：查看资产详情
+const handleViewDetail = (asset: Asset) => {
+  currentAsset.value = asset
+  showDetailDialog.value = true
+}
+
+// 新增：处理资产更新
+const handleAssetUpdate = () => {
+  showDetailDialog.value = false
+  emit('refresh-data')
+  ElMessage.success('资产信息已更新')
+}
+
+// 新增：删除资产
+const handleDelete = async (id: string) => {
+  try {
+    await ElMessageBox.confirm(
+      '确定要删除该资产吗？此操作不可撤销',
+      '确认删除',
+      {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+    
+    await assetsApi.deleteAsset(id)
+    ElMessage.success('删除成功')
+    emit('refresh-data')
+  } catch (error) {
+    console.error('删除失败:', error)
+    if (error !== 'cancel') {
+      ElMessage.error('删除失败')
+    }
+  }
+}
+
+// 新增：向父组件发送事件
+const emit = defineEmits(['refresh-data'])
 
 // 筛选后的资产列表
 const filteredAssets = computed(() => {
