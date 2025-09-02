@@ -267,6 +267,7 @@ import EchartsChart from '@/components/common/EchartsChart.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import { dashboardApi } from '@/api'
 import { getRelativeTime } from '@/utils'
+import worldMap from '@/map/world.json' // 假设已下载到本地
 
 // 路由
 const router = useRouter()
@@ -453,6 +454,8 @@ const loadChartData = async () => {
     
     // 地理威胁分布
     const geoThreats = await dashboardApi.getGeoThreatDistribution()
+    
+    EchartsChart.registerMap('world', worldMap) // 注册地图，'world' 需与配置中的 map 名称一致
     geoThreatOption.value = {
       tooltip: {
         trigger: 'item'

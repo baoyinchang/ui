@@ -205,8 +205,8 @@
     <!-- 分页组件 -->
     <div v-if="showPagination" class="table-pagination">
       <el-pagination
-        v-model:current-page="currentPage"
-        v-model:page-size="pageSize"
+        v-model:current-page="internalCurrentPage"
+        v-model:page-size="internalPageSize"
         :page-sizes="pageSizes"
         :size="paginationSize"
         :disabled="paginationDisabled"
@@ -517,12 +517,14 @@ const handleFilterChange = (filters: any) => {
 }
 
 const handleSizeChange = (size: number) => {
+  internalPageSize.value = size // 更新内部变量
   emit('size-change', size)
 }
 
 const handleCurrentPageChange = (page: number) => {
+  internalCurrentPage.value = page // 更新内部变量
   emit('current-change', page)
-  emit('page-change', { page, size: props.pageSize })
+  emit('page-change', { page, size: internalPageSize.value })
 }
 
 // 列设置相关
@@ -665,6 +667,20 @@ defineExpose({
 watch(() => props.columns, () => {
   initColumnSettings()
 }, { immediate: true })
+
+watch(
+  () => props.currentPage,
+  (newVal) => {
+    internalCurrentPage.value = newVal
+  }
+)
+
+watch(
+  () => props.pageSize,
+  (newVal) => {
+    internalPageSize.value = newVal
+  }
+)
 
 // 组件挂载
 onMounted(() => {

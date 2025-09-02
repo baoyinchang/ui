@@ -33,7 +33,7 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: 'asset-management',
         name: 'AssetManagement',
-        component: () => import('@/views/assets/index.vue'),
+        component: () => import('@/views/assets/AssetList.vue'),
         meta: { title: '资产管理', icon: 'Desktop' }
       },
       {
